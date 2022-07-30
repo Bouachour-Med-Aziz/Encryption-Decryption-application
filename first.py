@@ -1,7 +1,8 @@
 from re import fullmatch
 from turtle import color
 import PySimpleGUI as sg
-from numpy import False_, choose
+from matplotlib.pyplot import text
+from numpy import False_, choose, size
 import os
 
 # ------ Menu Definition ------ #
@@ -26,6 +27,8 @@ def display_word_file(word_file_path):
 
 def main_window():
     #  ------ GUI Definition ------- #
+    sg.theme("graygraygray")
+    
     layout = [[sg.Menu(menu_def1,key="menu", background_color='lightsteelblue', text_color='navy', disabled_text_color='yellow', pad=(10, 10))],
               [sg.Text("Input File:",s=15,justification="r",text_color="#cedef0"), sg.Input(key="-IN-"),
                sg.FileBrowse(file_types=(("Word Files", "*.docx*"),))],
@@ -47,8 +50,11 @@ def main_window():
               [sg.HorizontalSeparator()],
               ]
 
+    
+    sg.set_options(font=("Calibri",20))
     window = sg.Window("Application name", layout, resizable=True).Finalize()
     window.Maximize()
+
     while True:
         event, values = window.read()
         if event in (sg.WINDOW_CLOSED, "Exit"):
@@ -83,4 +89,3 @@ def main_window():
 
 if __name__ == "__main__":
     main_window()
-    sg.set_options(font="Arial")
