@@ -1,3 +1,4 @@
+from re import fullmatch
 from turtle import color
 import PySimpleGUI as sg
 from numpy import False_, choose
@@ -46,8 +47,8 @@ def main_window():
               [sg.HorizontalSeparator()],
               ]
 
-    window = sg.Window("Application name", layout, resizable=True,background_color="#cedef0")
-
+    window = sg.Window("Application name", layout, resizable=True,background_color="#cedef0").Finalize()
+    window.Maximize()
     while True:
         event, values = window.read()
         if event in (sg.WINDOW_CLOSED, "Exit"):
