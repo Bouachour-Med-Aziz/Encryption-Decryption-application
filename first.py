@@ -27,31 +27,30 @@ def display_word_file(word_file_path):
 
 def main_window():
     #  ------ GUI Definition ------- #
-    sg.theme("graygraygray")
-    
+    sg.theme("LightGrey1")
+    sg.set_options(font=("Calibri",15))
+
     layout = [[sg.Menu(menu_def1,key="menu", background_color='lightsteelblue', text_color='navy', disabled_text_color='yellow', pad=(10, 10))],
-              [sg.Text("Input File:",s=15,justification="r",text_color="#cedef0"), sg.Input(key="-IN-"),
+              [sg.Text("Input File:",s=15,justification="r"), sg.Input(key="-IN-",size=(40)),
                sg.FileBrowse(file_types=(("Word Files", "*.docx*"),))],
               [sg.Text("Output Folder:",s=15,justification="r"), sg.Input(
-                  key="-OUT-"), sg.FolderBrowse()],
-              [sg.Text("Conversion type:"), sg.Radio("Encryption", "Grp1", key="choice1"),
+                  key="-OUT-",size=(40)), sg.FolderBrowse()],
+              [sg.Text("Conversion type:")], [sg.Radio("Encryption", "Grp1", key="choice1",pad=((150,70),3)),
                sg.Radio("Decryption", "Grp1", key="choice2")],
-              [sg.Text("Choose at least one algorithm:",s=30,justification="r")],
+              [sg.Text("Choose at least one algorithm:")],
               [sg.Button("Select all algorithms"),
                sg.Button("Deselect all algorithms")],
-              [sg.Text("Symmetric algorithms:")],
-              [[sg.Checkbox("Algo 1", key="checkbox1")], [sg.Checkbox("Algo 2", key="checkbox2")],
-               [sg.Checkbox("Algo 3", key="checkbox3")]],
-              [sg.Text("Asymmetric algorithms:")],
-              [[sg.Checkbox("Algo 1", key="checkbox4")], [sg.Checkbox("Algo 2", key="checkbox5")],
-               [sg.Checkbox("Algo 3", key="checkbox6")]],
-              [sg.Exit(s=10,button_color="red" ), sg.Button("Display Word File"),
-               sg.Button("Reset"), sg.Button("Run",s=8,button_color="green")],
+              [sg.Text("1) Symmetric algorithms:",s=25,justification="r")],
+              [[sg.Checkbox("Algo 1", key="checkbox1",pad=((90,3),3))], [sg.Checkbox("Algo 2", key="checkbox2",pad=((90,3),3))],
+               [sg.Checkbox("Algo 3", key="checkbox3",pad=((90,3),3))]],
+              [sg.Text("2) Asymmetric algorithms:",s=25,justification="r")],
+              [[sg.Checkbox("Algo 1", key="checkbox4",pad=((90,3),3))], [sg.Checkbox("Algo 2", key="checkbox5",pad=((90,3),3))],
+               [sg.Checkbox("Algo 3", key="checkbox6",pad=((90,3),3))]],
+              [sg.Exit(s=10,button_color="red" ),
+               sg.Button("Reset",s=10), sg.Button("Display Word File",pad=((160,3),3)), sg.Button("Run",s=8,button_color="green")],
               [sg.HorizontalSeparator()],
               ]
 
-    
-    sg.set_options(font=("Calibri",20))
     window = sg.Window("Application name", layout, resizable=True).Finalize()
     window.Maximize()
 
