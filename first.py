@@ -54,7 +54,7 @@ def main_window():
             break
         if event == "Display Word File":
             if is_valid_path(values["-IN-"]):
-                display_word_file(values["-IN1-"])
+                display_word_file(values["-IN-"])
         if event == "Reset":
             window.Element("choice1").update(value=False)
             window.Element("choice2").update(value=False)
