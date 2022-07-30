@@ -47,7 +47,7 @@ def main_window():
               [sg.HorizontalSeparator()],
               ]
 
-    window = sg.Window("Application name", layout, resizable=True,background_color="#cedef0").Finalize()
+    window = sg.Window("Application name", layout, resizable=True).Finalize()
     window.Maximize()
     while True:
         event, values = window.read()
