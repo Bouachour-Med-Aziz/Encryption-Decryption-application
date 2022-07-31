@@ -1,1 +1,1 @@
-import PySimpleGUI
+sg.version,

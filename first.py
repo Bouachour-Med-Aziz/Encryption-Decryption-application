@@ -1,15 +1,19 @@
+from faulthandler import enable
+from pathlib import Path
 from re import fullmatch
 from turtle import color
+from unicodedata import numeric
 import PySimpleGUI as sg
 from matplotlib.pyplot import text
 from numpy import False_, choose, size
 import os
 
 # ------ Menu Definition ------ #
-
-menu_def1 = [["File", ["Command1", "Command2"]],
-             ["Settings", ["View"]], ["Credit", ["About.."]], ["Help"],
+menu_def1 = [["File", ["Command1", "Command2", "---", "Exit"]],
+             ["Settings", ["View"]], ["Credits", [
+                 "About.."]], ["Help", ["About..."]],
              ]
+
 menu_def = ['&File', ['&New File', '&Open...', 'Open &Module', '---', '!&Recent Files', 'C&lose']
             ], ['&Save', ['&Save File', 'Save &As', 'Save &Copy']], ['&Edit', ['&Cut', '&Copy', '&Paste']]
 
@@ -25,12 +29,39 @@ def display_word_file(word_file_path):
     os.startfile(word_file_path)
 
 
+def setting_window():
+    layout = [[sg.Text("SETTINGS")],
+              [sg.Text("Font size"), sg.Input(s=2, key="-FONTSIZE-")],
+              [sg.Text("Font family"), sg.Combo(["Arial", "Baskerville", "Calibri", "Cambria", "Cambria", "Courier New",
+                                                 "Georgia", "Goudy Old Style", "Microsoft Sans Serif", "Verdana"], default_value="Calibri", key="-FONTFAMILY-")],
+              [sg.Text("Theme"), sg.Combo(["Black", "BlueMono", "BrightColors", "Dark", "DarkBlack", "GrayGrayGray",
+                                           "LightBlue", "SystemDefaultForReal", "Purple", "SystemDefault"], default_value="LightGrey1", key="-THEME-")],
+              [sg.Button("Save Current Settings", s=20)]]
+
+    window = sg.Window("Settings Window", layout)
+    while True:
+        event, values = window.read()
+        if event == sg.WINDOW_CLOSED:
+            break
+        if event == "Save Current Settings":
+            sg.set_options(font=(values["-FONTFAMILY-"], values["-FONTSIZE-"]))
+            sg.theme(values["-THEME-"])
+            break
+    window.close()
+
+
+def change_settings(theme, font, size):
+    sg.theme(theme)
+    sg.set_options(font=(font, size))
+
+
 def main_window():
     #  ------ GUI Definition ------- #
-    sg.theme("LightGrey1")
-    sg.set_options(font=("Calibri", 15))
+    # sg.theme("LightGrey1")
+    # sg.set_options(font=("Calibri", 15))
+    change_settings("LightGrey1", "Calibri", 15)
 
-    layout = [[sg.Menu(menu_def1, key="menu", background_color='lightsteelblue', text_color='navy', disabled_text_color='yellow', pad=(10, 10))],
+    layout = [[sg.Menu(menu_def1, key="menu", background_color='lightsteelblue', text_color='navy', disabled_text_color='yellow', pad=(200, 1))],
               [sg.Text("Input File:", s=15, justification="r"), sg.Input(key="-IN-", size=(40)),
                sg.FileBrowse(file_types=(("Word Files", "*.docx*"),))],
               [sg.Text("Output Folder:", s=15, justification="r"), sg.Input(
@@ -78,13 +109,18 @@ def main_window():
             for y in "123456":
                 window["checkbox"+y].update(value=False)
 
-        if event == "Command1":
-            print("Command1")
+        if event == "View":
+            setting_window()
+            change_settings()
+        if event == "About...":
+            sg.popup("This project have as purpose to help you to choose the best algorithm to encrypt/decrypt your file. We provide different types of algorithms which you can visuale in a graphic curve.", title="Help")
         if event == "About..":
-            sg.popup('This project is ...')
+            sg.popup("Version : 1.0", "PySimpleGUI Version :", sg.version, "This project is made by the efforts of :",  "* Moetez Bouhlel", "* Firas Necib", "* Mohamed Aziz Bouachour",
+                     title="About the application")
 
     window.close()
 
 
 if __name__ == "__main__":
+    SETTING_PATH = Path.cwd()
     main_window()

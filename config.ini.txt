@@ -1,0 +1,4 @@
+[GUI]
+font_size = 10
+font_family = Calibri
+theme = LightGrey1
