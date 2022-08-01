@@ -1,1 +1,1 @@
-sg.version,
+window.close()

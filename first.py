@@ -31,35 +31,34 @@ def display_word_file(word_file_path):
 
 def setting_window():
     layout = [[sg.Text("SETTINGS")],
-              [sg.Text("Font size"), sg.Input(s=2, key="-FONTSIZE-")],
+              [sg.Text("Font size"), sg.Input(s=2,default_text="15", key="-FONTSIZE-")],
               [sg.Text("Font family"), sg.Combo(["Arial", "Baskerville", "Calibri", "Cambria", "Cambria", "Courier New",
                                                  "Georgia", "Goudy Old Style", "Microsoft Sans Serif", "Verdana"], default_value="Calibri", key="-FONTFAMILY-")],
               [sg.Text("Theme"), sg.Combo(["Black", "BlueMono", "BrightColors", "Dark", "DarkBlack", "GrayGrayGray",
                                            "LightBlue", "SystemDefaultForReal", "Purple", "SystemDefault"], default_value="LightGrey1", key="-THEME-")],
               [sg.Button("Save Current Settings", s=20)]]
 
-    window = sg.Window("Settings Window", layout)
+    window = sg.Window("Settings Window", layout,modal=True)
+    
     while True:
         event, values = window.read()
         if event == sg.WINDOW_CLOSED:
             break
         if event == "Save Current Settings":
-            sg.set_options(font=(values["-FONTFAMILY-"], values["-FONTSIZE-"]))
-            sg.theme(values["-THEME-"])
-            break
+            sg.popup_no_titlebar("Setting saved")
+            window.close()
+            main_window(values["-THEME-"],values["-FONTFAMILY-"],values["-FONTSIZE-"])                                   
     window.close()
-
+    print("testtttttt")
 
 def change_settings(theme, font, size):
     sg.theme(theme)
     sg.set_options(font=(font, size))
+    
 
-
-def main_window():
-    #  ------ GUI Definition ------- #
-    # sg.theme("LightGrey1")
-    # sg.set_options(font=("Calibri", 15))
-    change_settings("LightGrey1", "Calibri", 15)
+def main_window(t="LightGrey1",f="Calibri",s=15):
+    #  ------ GUI Definition ------- #  
+    change_settings(t,f,s)
 
     layout = [[sg.Menu(menu_def1, key="menu", background_color='lightsteelblue', text_color='navy', disabled_text_color='yellow', pad=(200, 1))],
               [sg.Text("Input File:", s=15, justification="r"), sg.Input(key="-IN-", size=(40)),
@@ -111,16 +110,16 @@ def main_window():
 
         if event == "View":
             setting_window()
-            change_settings()
+            
+
         if event == "About...":
             sg.popup("This project have as purpose to help you to choose the best algorithm to encrypt/decrypt your file. We provide different types of algorithms which you can visuale in a graphic curve.", title="Help")
         if event == "About..":
             sg.popup("Version : 1.0", "PySimpleGUI Version :", sg.version, "This project is made by the efforts of :",  "* Moetez Bouhlel", "* Firas Necib", "* Mohamed Aziz Bouachour",
-                     title="About the application")
+                    title="About the application")
 
     window.close()
 
 
 if __name__ == "__main__":
-    SETTING_PATH = Path.cwd()
     main_window()
