@@ -1,1 +1,1 @@
-window.close()
+change_settings(t,f,s)
