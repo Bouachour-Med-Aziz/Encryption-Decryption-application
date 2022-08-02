@@ -1,1 +1,1 @@
-change_settings(t,f,s)
+s=10, justification="r"

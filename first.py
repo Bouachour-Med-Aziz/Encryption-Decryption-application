@@ -32,11 +32,12 @@ def display_word_file(word_file_path):
 
 def setting_window(w):
     layout = [[sg.Text("SETTINGS")],
-              [sg.Text("Font size"), sg.Input(
-                  s=2, default_text="15", key="-FONTSIZE-")],
-              [sg.Text("Font family"), sg.Combo(["Arial", "Baskerville", "Calibri", "Cambria", "Cambria", "Courier New",
+              [sg.Text("These settings below are recommanded for a best user experience !")],
+          
+              [sg.Text("Font size:",s=10, justification="l"), sg.Combo([10,11,12,13,14,15,16,17,18,19,20], default_value=15, key="-FONTSIZE-")],
+              [sg.Text("Font family:",s=10, justification="l"), sg.Combo(["Arial", "Baskerville", "Calibri", "Cambria", "Cambria", "Courier New",
                                                  "Georgia", "Goudy Old Style", "Microsoft Sans Serif", "Verdana"], default_value="Calibri", key="-FONTFAMILY-")],
-              [sg.Text("Theme"), sg.Combo(["Black", "BlueMono", "BrightColors", "Dark", "DarkBlack", "GrayGrayGray",
+              [sg.Text("Theme:",s=10, justification="l"), sg.Combo(["Black", "BlueMono", "BrightColors", "Dark", "DarkBlack", "GrayGrayGray",
                                            "LightBlue", "SystemDefaultForReal", "Purple", "SystemDefault"], default_value="LightGrey1", key="-THEME-")],
               [sg.Button("Save Current Settings", s=20)]]
 
