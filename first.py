@@ -1,3 +1,7 @@
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+import timeit
+from cryptography.fernet import Fernet
+from pathlib import Path
 import json
 import os
 import io
@@ -9,12 +13,23 @@ check_num=0
 state=False
 pathset=os.path.expanduser('~/Documents/settingfile.json')
 checkboxs=['-1-','-2-','-3-','-4-','-5-','-6-']
+list_val=[0.0]
 theta = np.linspace(0, 2 * np.pi, 100)
 x = 16 * ( np.sin(theta) ** 3 )
 y = 13 * np.cos(theta) - 5* np.cos(2*theta) - 2 * np.cos(3*theta) - np.cos(4*theta)
 year = [1920,1930,1940,1950,1960,1970,1980,1990,2000,2010]
 unemployment_rate = [9.8,12,8,7.2,6.9,7,6.5,6.2,5.5,6.3]
 dict_default = {"setting":{"1":'15',"2":"Calibri","3":"LightGrey1"}}
+def txt_reader(name):
+    if Path(name).is_file():
+            try:
+            
+                with open(name, "rt", encoding='utf-8') as f:
+                    text = f.read()
+            except Exception as e:
+                print("Error: ", e)
+    return text
+
 def create_bar_graph(year, unemployment_rate):
     plt.figure(figsize =(5, 4))
     plt.bar(year, unemployment_rate, color='red', width=0.4)
@@ -32,9 +47,9 @@ def button_text(p):
     if p==False:
         return 'Select all algorithms'
     return 'Deselect all algorithms'
-def plot_draw():
+def plot_draw(z=[],n=[]):
     fig =plt.figure(figsize=(5,4))
-    fig.add_subplot(111).plot(x,y)
+    fig.add_subplot(111).plot(z,n)
     figure_canvas_agg = FigureCanvasTkAgg(fig,window1['-canvas1-'].TKCanvas)
     figure_canvas_agg.draw()
     figure_canvas_agg.get_tk_widget().pack()
@@ -87,7 +102,7 @@ def main_window(w):
           ['Credits',['About...']],
           ['Help',['About..']]]
 
-    frame1=[[sg.Text('Input File:',justification='r'),sg.Push(),sg.Input(key='-In-'),sg.FilesBrowse(file_types=(("Word Files", "*.docx*")),)],
+    frame1=[[sg.Text('Input File:',justification='r'),sg.Push(),sg.Input(key='-In-'),sg.FilesBrowse(file_types=(("Word Files", "*.docx*"),("Text File","*.txt*"),))],
      [sg.Text('Output Folder:',justification='r'),sg.Input(key='-out-'),sg.FolderBrowse()]]
     frame2=[[sg.Radio("Encryption",'Gp1',key='-choix1-'),sg.Radio("Decryption",'Gp1',key='-choix2-')]]
     subframe1=[[sg.Checkbox('Algo 1',key='-1-',enable_events=True)],
@@ -107,14 +122,14 @@ def main_window(w):
                  [sg.Frame('Private key',frame6)]]
     col1=[
       [sg.Frame('Desired File',frame1)],
-      [sg.Multiline(size=(40,10),visible=False,justification='l',key='-inputs-'),sg.Push(),sg.Button('Multiple Files',key='-trigger-')],
+      [sg.Multiline(size=(30,5),visible=False,justification='l',key='-inputs-'),sg.Push(),sg.Button('Multiple Files',key='-trigger-')],
       [sg.Frame('Operations',frame2)],
       [sg.Column([[sg.Frame('Available Algorithms',frame3)]]),sg.VSeparator(),sg.Column(mini_column)],
-     [sg.B('Display Word File'),sg.B('Reset',key='-reset-'),sg.Push(),sg.B('Exit',key='-exit-',size=10,button_color='red'),sg.B('Run',key='-run-',size=10,button_color='green')]]
+     [sg.B('Display File',key='-display-'),sg.B('Reset',key='-reset-'),sg.Push(),sg.B('Exit',key='-exit-',size=10,button_color='red'),sg.B('Run',key='-run-',size=10,button_color='green')]]
     layout =[[sg.Menu(menu_def,key='-menu-')],
          [sg.Column(col1),sg.VSeparator(),sg.Column([[sg.Canvas(key='-canvas1-',size=(50,50))],
                                                      [sg.Canvas(key='-canvas2-',size=(50,50))]])]]
-    return sg.Window('Time-Out',layout,finalize=True).finalize()
+    return sg.Window('Time-Out',layout,finalize=True)
 
 def setting_checkup():
     if os.path.isfile(pathset) and os.access(pathset,os.R_OK):
@@ -131,13 +146,23 @@ def setting_checkup():
 default=setting_checkup()
 # print(default)
 window1 = main_window(default)
-window1.maximize()
 plot_draw()
 draw_figure(window1['-canvas2-'].TKCanvas, create_bar_graph(year, unemployment_rate))
 while True:
     event, values=window1.read()
     if event == sg.WIN_CLOSED or event =='-exit-' :
         break
+    if event == '-display-':
+        filename=values['-In-']
+        test="from cryptography.fernet import Fernet;filename=values['-In-'];key= Fernet.generate_key();f=Fernet(key);from __main__ import txt_reader;txt=txt_reader(filename).strip().encode()"
+        txt=txt_reader(filename).strip().encode()
+        print(txt)
+        key= Fernet.generate_key()
+        f=Fernet(key)
+        res=timeit.timeit(stmt="f.encrypt(txt)",setup=test,number=10,globals=globals())
+        list_val.append(res)
+        plot_draw(list_val,[0.0,2.0])
+        
     if event =='-all-':
         state= not state
         for i in checkboxs:
