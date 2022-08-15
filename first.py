@@ -104,8 +104,8 @@ def main_window(w):
 
     frame1=[[sg.Text('Input File:',justification='r'),sg.Push(),sg.Input(key='-In-'),sg.FilesBrowse(file_types=(("Word Files", "*.docx*"),("Text File","*.txt*"),))],
      [sg.Text('Output Folder:',justification='r'),sg.Input(key='-out-'),sg.FolderBrowse()]]
-    frame2=[[sg.Radio("Encryption",'Gp1',key='-choix1-'),sg.Radio("Decryption",'Gp1',key='-choix2-')]]
-    subframe1=[[sg.Checkbox('Algo 1',key='-1-',enable_events=True)],
+    frame2=[[sg.Radio("Encryption",'Gp1',key='-choix1-',default=True),sg.Radio("Decryption",'Gp1',key='-choix2-')]]
+    subframe1=[[sg.Checkbox('Algo 1',key='-1-',enable_events=True),sg.Checkbox('Algo 10',key='-10-',enable_events=True)],
            [sg.Checkbox('Algo 2',key='-2-',enable_events=True)],
            [sg.Checkbox('Algo 3',key='-3-',enable_events=True)]]
     subframe2=[[sg.Checkbox('Algo 1',key='-4-',enable_events=True)],
@@ -142,6 +142,34 @@ def setting_checkup():
     with open(pathset, 'r') as f:
         data=json.load(f)
     return list(data["setting"].values())
+
+def encryption(alg):
+    filename=values['-In-']
+    txt=txt_reader(filename)
+    print(len(txt))
+    x=16-len(txt)%16
+    print(x)
+    if len(txt)%16 != 0 :
+        for i in range(x):
+            txt = txt + ' '
+    print(txt)
+    txt = txt.encode()
+    match alg :
+        case 1:
+            key = os.urandom(32)
+            iv = os.urandom(16)
+            cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
+            encryptor = cipher.encryptor()
+            ct = encryptor.update(txt) + encryptor.finalize()
+            decryptor = cipher.decryptor()
+            decryptor.update(ct) + decryptor.finalize()
+    # key= Fernet.generate_key()
+    # f=Fernet(key)
+    test="from cryptography.fernet import Fernet;filename=values['-In-'];key= Fernet.generate_key();f=Fernet(key);from __main__ import txt_reader;txt=txt_reader(filename).strip().encode()"
+    res=timeit.timeit(stmt="f.encrypt(txt)",setup=test,number=10,globals=globals())
+    list_val.append(res)
+    plot_draw(list_val,[0.0,2.0])
+
 # fname='settingfile'
 default=setting_checkup()
 # print(default)
@@ -153,15 +181,14 @@ while True:
     if event == sg.WIN_CLOSED or event =='-exit-' :
         break
     if event == '-display-':
-        filename=values['-In-']
-        test="from cryptography.fernet import Fernet;filename=values['-In-'];key= Fernet.generate_key();f=Fernet(key);from __main__ import txt_reader;txt=txt_reader(filename).strip().encode()"
-        txt=txt_reader(filename).strip().encode()
-        print(txt)
-        key= Fernet.generate_key()
-        f=Fernet(key)
-        res=timeit.timeit(stmt="f.encrypt(txt)",setup=test,number=10,globals=globals())
-        list_val.append(res)
-        plot_draw(list_val,[0.0,2.0])
+        # filename=values['-In-']
+        # txt=txt_reader(filename).strip().encode()
+        # print(txt)
+        print('...')
+    
+    if event == '-run-':
+        if values[checkboxs[0]] == True :
+            encryption(1)
         
     if event =='-all-':
         state= not state
@@ -190,8 +217,9 @@ while True:
         sg.popup('Version : 1.0", "PySimpleGUI Version :', sg.version, 'This project is made by the efforts of :',  "* Moetez Bouhlel", "* Firas Necib", "* Mohamed Aziz Bouachour",
                      title='About the application')
     if event == '-reset-':
-        window1['-choix1-'].update(False)
+        window1['-choix1-'].update(True)
         window1['-choix2-'].update(False)
+        window1['-In-'].update('')
         state=False
         for i in checkboxs:
                 window1[i].update(state)
