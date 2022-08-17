@@ -1,6 +1,10 @@
+from msilib.schema import RadioButton
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import timeit
 from cryptography.fernet import Fernet
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric import rsa
 from pathlib import Path
 import json
 import os
@@ -12,7 +16,7 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 check_num=0
 state=False
 pathset=os.path.expanduser('~/Documents/settingfile.json')
-checkboxs=['-1-','-2-','-3-','-4-','-5-','-6-']
+checkboxs=['-1-','-2-','-3-','-4-','-5-','-6-','-7-','-8-','-9-','-10-','-11-','-12-']
 list_val=[0.0]
 theta = np.linspace(0, 2 * np.pi, 100)
 x = 16 * ( np.sin(theta) ** 3 )
@@ -102,15 +106,15 @@ def main_window(w):
           ['Credits',['About...']],
           ['Help',['About..']]]
 
-    frame1=[[sg.Text('Input File:',justification='r'),sg.Push(),sg.Input(key='-In-'),sg.FilesBrowse(file_types=(("Word Files", "*.docx*"),("Text File","*.txt*"),))],
+    frame1=[[sg.Text('Input File:',justification='r'),sg.Push(),sg.Input(key='-In-'),sg.FilesBrowse(file_types=(("Text File","*.txt*"),("Word Files", "*.docx*"),))],
      [sg.Text('Output Folder:',justification='r'),sg.Input(key='-out-'),sg.FolderBrowse()]]
     frame2=[[sg.Radio("Encryption",'Gp1',key='-choix1-',default=True),sg.Radio("Decryption",'Gp1',key='-choix2-')]]
-    subframe1=[[sg.Checkbox('Algo 1',key='-1-',enable_events=True),sg.Checkbox('Algo 10',key='-10-',enable_events=True)],
-           [sg.Checkbox('Algo 2',key='-2-',enable_events=True)],
-           [sg.Checkbox('Algo 3',key='-3-',enable_events=True)]]
-    subframe2=[[sg.Checkbox('Algo 1',key='-4-',enable_events=True)],
-           [sg.Checkbox('Algo 2',key='-5-',enable_events=True)],
-           [sg.Checkbox('Algo 3',key='-6-',enable_events=True)]]
+    subframe1=[[sg.Checkbox('TripleDES',key='-1-',enable_events=True),sg.Checkbox('AES',key='-4-',enable_events=True)],
+           [sg.Checkbox('Camellia',key='-2-',enable_events=True),sg.Checkbox('CASTS',key='-5-',enable_events=True)],
+           [sg.Checkbox('SM4',key='-3-',enable_events=True),sg.Checkbox('SEED',key='-6-',enable_events=True)]]
+    subframe2=[[sg.Checkbox('Algo 1',key='-7-',enable_events=True),sg.Checkbox('Algo 1',key='-10-',enable_events=True)],
+           [sg.Checkbox('Algo 2',key='-8-',enable_events=True),sg.Checkbox('Algo 1',key='-11-',enable_events=True)],
+           [sg.Checkbox('Algo 3',key='-9-',enable_events=True),sg.Checkbox('Algo 1',key='-12-',enable_events=True)]]
     frame3=[[sg.Button('Select all algorithms',key='-all-',s=(19,1))],
         [sg.Frame('Symmetric algorithms',subframe1,border_width=0)],
         [sg.Frame('Asymmetric algorithms',subframe2,border_width=0)]]
@@ -155,14 +159,66 @@ def encryption(alg):
     print(txt)
     txt = txt.encode()
     match alg :
+        case 0:
+            key = os.urandom(16)
+            iv = os.urandom(8)
+            cipher = Cipher(algorithms.TripleDES(key), modes.CBC(iv))
+            encryptor = cipher.encryptor()
+            ct = encryptor.update(txt) + encryptor.finalize()
+            # decryptor = cipher.decryptor()
+            # decryptor.update(ct) + decryptor.finalize()
         case 1:
+            key = os.urandom(32)
+            iv = os.urandom(16)
+            cipher = Cipher(algorithms.Camellia(key), modes.CBC(iv))
+            encryptor = cipher.encryptor()
+            ct = encryptor.update(txt) + encryptor.finalize()
+            # decryptor = cipher.decryptor()
+            # decryptor.update(ct) + decryptor.finalize()
+        case 2:
+            key = os.urandom(16)
+            iv = os.urandom(16)
+            algorithm = algorithms.SM4(key)
+            cipher = Cipher(algorithm, modes.CBC(iv))
+            encryptor = cipher.encryptor()
+            ct = encryptor.update(txt) 
+            # decryptor = cipher.decryptor()
+            # decryptor.update(ct) + decryptor.finalize()
+        case 3:
             key = os.urandom(32)
             iv = os.urandom(16)
             cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
             encryptor = cipher.encryptor()
             ct = encryptor.update(txt) + encryptor.finalize()
-            decryptor = cipher.decryptor()
-            decryptor.update(ct) + decryptor.finalize()
+            # decryptor = cipher.decryptor()
+            # decryptor.update(ct) + decryptor.finalize()
+        case 4:
+            key = os.urandom(16)
+            iv = os.urandom(8)
+            cipher = Cipher(algorithms.CAST5(key), modes.CBC(iv))
+            encryptor = cipher.encryptor()
+            ct = encryptor.update(txt) + encryptor.finalize()
+            # decryptor = cipher.decryptor()
+            # decryptor.update(ct) + decryptor.finalize()
+        case 5:
+            key = os.urandom(16)
+            iv = os.urandom(16)
+            cipher = Cipher(algorithms.SEED(key), modes.CBC(iv))
+            encryptor = cipher.encryptor()
+            ct = encryptor.update(txt) + encryptor.finalize()
+            # decryptor = cipher.decryptor()
+            # decryptor.update(ct) + decryptor.finalize()
+        case 6:
+            message = b"encrypted data"
+            private_key = rsa.generate_private_key(
+                public_exponent=65537,
+                key_size=2048,)
+            public_key = private_key.public_key()         
+            ciphertext = public_key.encrypt(txt,padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None))
+                
     # key= Fernet.generate_key()
     # f=Fernet(key)
     test="from cryptography.fernet import Fernet;filename=values['-In-'];key= Fernet.generate_key();f=Fernet(key);from __main__ import txt_reader;txt=txt_reader(filename).strip().encode()"
@@ -186,10 +242,21 @@ while True:
         # print(txt)
         print('...')
     
-    if event == '-run-':
+    if event == '-run-' and values['-choix1-']:
         if values[checkboxs[0]] == True :
+            encryption(0)
+        if values[checkboxs[1]] == True :
             encryption(1)
-        
+        if values[checkboxs[2]] == True :
+            encryption(2)
+        if values[checkboxs[3]] == True :
+            encryption(3)
+        if values[checkboxs[4]] == True :
+            encryption(4)
+        if values[checkboxs[5]] == True :
+            encryption(5)
+        if values[checkboxs[6]] == True :
+            encryption(6)
     if event =='-all-':
         state= not state
         for i in checkboxs:
