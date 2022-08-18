@@ -18,7 +18,6 @@ state=False
 pathset=os.path.expanduser('~/Documents/settingfile.json')
 checkboxs=['-1-','-2-','-3-','-4-','-5-','-6-','-7-','-8-','-9-','-10-','-11-','-12-']
 list_val=[0.0]
-
 year = [1920,1930,1940,1950,1960,1970,1980,1990,2000,2010]
 unemployment_rate = [9.8,12,8,7.2,6.9,7,6.5,6.2,5.5,6.3]
 year2=year[::-1]
@@ -27,7 +26,6 @@ dict_default = {"setting":{"1":'15',"2":"Calibri","3":"LightGrey1"}}
 def txt_reader(name):
     if Path(name).is_file():
             try:
-            
                 with open(name, "rt", encoding='utf-8') as f:
                     text = f.read()
             except Exception as e:
@@ -40,7 +38,7 @@ def create_bar_graph(year, unemployment_rate):
     plt.title('Unemployment Rate Vs Year', fontsize=14)
     plt.xlabel('Year', fontsize=14)
     plt.ylabel('Unemployment Rate', fontsize=14)
-    return (plt.gcf(), var)
+    return (plt.gcf(), var,plt)
 def draw_figure(canvas, figure):
     figure_canvas_agg = FigureCanvasTkAgg(figure[0], canvas)
     figure_canvas_agg.draw()
@@ -228,9 +226,7 @@ def encryption(alg):
     list_val.append(res)
     plot_draw(list_val,[0.0,2.0])
 
-# fname='settingfile'
 default=setting_checkup()
-# print(default)
 window1 = main_window(default)
 Fig22=plot_draw()
 akg=plot_draw2(Fig22,window1['-canvas1-'].TKCanvas)
@@ -241,17 +237,13 @@ while True:
     if event == sg.WIN_CLOSED or event =='-exit-' :
         break
     if event == '-display-':
-        # filename=values['-In-']
-        # txt=txt_reader(filename).strip().encode()
-        # print(txt)
-        print('...')
+        break
     
     if event == '-run-' and values['-choix1-']:
         if values[checkboxs[0]] == True :
             encryption(0)
         if values[checkboxs[1]] == True :
             encryption(1)
-<<<<<<< HEAD
         if values[checkboxs[2]] == True :
             encryption(2)
         if values[checkboxs[3]] == True :
@@ -262,7 +254,7 @@ while True:
             encryption(5)
         if values[checkboxs[6]] == True :
             encryption(6)
-=======
+
         axes=Fig22.axes
         axes[0].plot([0,2,4],[1,3,5])
         akg.draw()
@@ -271,8 +263,10 @@ while True:
             rect.set_height(h)
         akg2.draw()
         akg2.get_tk_widget().pack(side='top', fill='both', expand=1)
+        Fig23[2].cla()
+        akg2.draw()
+        akg2.get_tk_widget().pack(side='top', fill='both', expand=1)
         
->>>>>>> 9e6032ec22abc014f8432fe5b3ca483489887fdb
     if event =='-all-':
         state= not state
         for i in checkboxs:
