@@ -14,9 +14,10 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 check_num=0
 state=False
 pathset=os.path.expanduser('~/Documents/settingfile.json')
-
-checkboxs=['-1-','-2-','-3-','-4-','-5-','-6-','-7-','-8-','-9-','-10-','-11-','-12-']
-available=['TripleDES','Camellia','SM4','AES','CASTS','SEED']
+cipher_text=[]
+final=[]
+checkboxs=['-1-','-2-','-3-','-4-','-5-','-6-','-7-']
+available=['TripleDES','Camellia','SM4','AES','CASTS','SEED','RSA']
 dict_default = {"setting":{"1":'15',"2":"Calibri","3":"LightGrey1"}}
 def word_reader(name):
     docx=zipfile.ZipFile(name)
@@ -113,14 +114,12 @@ def main_window(w):
     subframe1=[[sg.Checkbox('TripleDES',key='-1-',enable_events=True),sg.Checkbox('AES',key='-4-',enable_events=True)],
            [sg.Checkbox('Camellia',key='-2-',enable_events=True),sg.Checkbox('CASTS',key='-5-',enable_events=True)],
            [sg.Checkbox('SM4',key='-3-',enable_events=True),sg.Checkbox('SEED',key='-6-',enable_events=True)]]
-    subframe2=[[sg.Checkbox('Algo 1',key='-7-',enable_events=True),sg.Checkbox('Algo 1',key='-10-',enable_events=True)],
-           [sg.Checkbox('Algo 2',key='-8-',enable_events=True),sg.Checkbox('Algo 1',key='-11-',enable_events=True)],
-           [sg.Checkbox('Algo 3',key='-9-',enable_events=True),sg.Checkbox('Algo 1',key='-12-',enable_events=True)]]
+    subframe2=[[sg.Checkbox('RSA',key='-7-',enable_events=True)]]
     frame3=[[sg.Button('Select all algorithms',key='-all-',s=(19,1))],
         [sg.Frame('Symmetric algorithms',subframe1,border_width=0)],
         [sg.Frame('Asymmetric algorithms',subframe2,border_width=0)]]
-    frame4=[[sg.Input()]]
-    frame5=[[sg.Input()]]
+    frame4=[[sg.Input(key='-key-')]]
+    frame5=[[sg.Input(key='-iv-')]]
     frame6=[[sg.Input()]]
     mini_column=[[sg.Frame('Password',frame4)],
                  [sg.Frame('Public key',frame5)],
@@ -148,7 +147,7 @@ def setting_checkup():
         data=json.load(f)
     return list(data["setting"].values())
  
-def encryption(alg):
+def encryption(alg,condition):
     filename=values['-In-']
     if filename.split(".")[-1]=="txt":
         txt=txt_reader(filename)
@@ -163,76 +162,103 @@ def encryption(alg):
     txt = txt.encode()
     match alg :
         case 0:
-            key = os.urandom(16)
-            iv = os.urandom(8)
-            cipher = Cipher(algorithms.TripleDES(key), modes.CBC(iv))
-            encryptor = cipher.encryptor()
-            ct0 = encryptor.update(txt) + encryptor.finalize()
-            t0=timeit.timeit(stmt="ct0",globals=locals())
-            results.append(t0)
-            # decryptor = cipher.decryptor()
-            # decryptor.update(ct) + decryptor.finalize()
+            if condition ==True :
+                key = os.urandom(16)
+                print(key)
+                iv = os.urandom(8)
+                print(iv)
+                cipher = Cipher(algorithms.TripleDES(key), modes.CBC(iv))
+                encryptor = cipher.encryptor()
+                ct0 = encryptor.update(txt) + encryptor.finalize()
+                cipher_text.append(ct0)
+                t0=timeit.timeit(stmt="ct0",globals=locals())
+                results.append(t0)
+                final.append((key,iv))
+            if condition !=True:
+                cipher = Cipher(algorithms.TripleDES(b'#\xa3HSm5\xe2\x86\xca\xdc\xb5\xdd\xbd\xbd<\x0e'), modes.CBC(b'\xcd\x12>\x1d\xe8S\x85U'))
+                decryptor = cipher.decryptor()
+                w=decryptor.update(b'*T\xc9\xe1\xc0\x9c\xact\xf6jE\xde\xcf\xe8.\t\xbcrH\xfb\x9a\x86\xc9\xa4\xc8>l\x07T\xcd\x90\xf6Q\x98\xf9\x14]z\xb8&\xab\x88\xa9X\xcc\xf8\x93.') + decryptor.finalize()
+                print(w)
         case 1:
             key = os.urandom(32)
             iv = os.urandom(16)
             cipher = Cipher(algorithms.Camellia(key), modes.CBC(iv))
             encryptor = cipher.encryptor()
             ct1 = encryptor.update(txt) + encryptor.finalize()
+            cipher_text.append(ct1)
             t1=timeit.timeit(stmt="ct1",globals=locals())
             results.append(t1)
-            # decryptor = cipher.decryptor()
-            # decryptor.update(ct) + decryptor.finalize()
+            final.append((key,iv))
+            if condition !=True:
+                cipher = Cipher(algorithms.Camellia(values['-key-']), modes.CBC(values['-iv-']))
+                decryptor = cipher.decryptor()
+                decryptor.update(ct1) + decryptor.finalize()
         case 2:
             key = os.urandom(16)
             iv = os.urandom(16)
-            algorithm = algorithms.SM4(key)
-            cipher = Cipher(algorithm, modes.CBC(iv))
+            cipher = Cipher(algorithms.SM4(key), modes.CBC(iv))
             encryptor = cipher.encryptor()
             ct2 = encryptor.update(txt)
+            cipher_text.append(ct2)
             t2=timeit.timeit(stmt="ct2",globals=locals())
             results.append(t2)
-            # decryptor = cipher.decryptor()
-            # decryptor.update(ct) + decryptor.finalize()
+            final.append((key,iv))
+            if condition !=True:
+                cipher = Cipher(algorithms.SM4(values['-key-']), modes.CBC(values['-iv-']))
+                decryptor = cipher.decryptor()
+                decryptor.update(ct2) + decryptor.finalize()
         case 3:
             key = os.urandom(32)
             iv = os.urandom(16)
             cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
             encryptor = cipher.encryptor()
             ct3 = encryptor.update(txt) + encryptor.finalize()
+            cipher_text.append(ct3)
             t3=timeit.timeit(stmt="ct3",globals=locals())
             results.append(t3)
-            # decryptor = cipher.decryptor()
-            # decryptor.update(ct) + decryptor.finalize()
+            final.append((key,iv))
+            if condition !=True:
+                cipher = Cipher(algorithms.AES(values['-key-']), modes.CBC(values['-iv-']))
+                decryptor = cipher.decryptor()
+                decryptor.update(ct3) + decryptor.finalize()
         case 4:
             key = os.urandom(16)
             iv = os.urandom(8)
             cipher = Cipher(algorithms.CAST5(key), modes.CBC(iv))
             encryptor = cipher.encryptor()
             ct4= encryptor.update(txt) + encryptor.finalize()
+            cipher_text.append(ct4)
             t4=timeit.timeit(stmt="ct4",globals=locals())
             results.append(t4)
-            # decryptor = cipher.decryptor()
-            # decryptor.update(ct) + decryptor.finalize()
+            final.append((key,iv))
+            if condition !=True:
+                cipher = Cipher(algorithms.CAST5(values['-key-']), modes.CBC(values['-iv-']))
+                decryptor = cipher.decryptor()
+                decryptor.update(ct4) + decryptor.finalize()
         case 5:
             key = os.urandom(16)
             iv = os.urandom(16)
             cipher = Cipher(algorithms.SEED(key), modes.CBC(iv))
             encryptor = cipher.encryptor()
             ct5 = encryptor.update(txt) + encryptor.finalize()
+            cipher_text.append(ct5)
             t5=timeit.timeit(stmt="ct5",globals=locals())
             results.append(t5)
-            # decryptor = cipher.decryptor()
-            # decryptor.update(ct) + decryptor.finalize()
+            final.append((key,iv))
+            if condition !=True:
+                cipher = Cipher(algorithms.SEED(values['-key-']), modes.CBC(values['-iv-']))
+                decryptor = cipher.decryptor()
+                decryptor.update(ct5) + decryptor.finalize()
         case 6:
             private_key = rsa.generate_private_key(
                 public_exponent=65537,
                 key_size=2048,)
             public_key = private_key.public_key()         
-            ciphertext = public_key.encrypt(txt,padding.OAEP(
+            ciphertxt = public_key.encrypt(txt,padding.OAEP(
                 mgf=padding.MGF1(algorithm=hashes.SHA256()),
                 algorithm=hashes.SHA256(),
                 label=None))
-            
+        
 default=setting_checkup()
 window1 = main_window(default)
 Fig22=plot_draw()
@@ -244,35 +270,39 @@ while True:
     if event == sg.WIN_CLOSED or event =='-exit-' or event == 'Exit':
         break
     if event =='Save as':
-        sg.popup()
+        file_path=sg.popup_get_file('Save as',no_window=True,save_as=True,file_types=(("Text File","*.txt*"),))+'.txt'
+        file=Path(file_path)
+        file.write_text(f'{cipher_text[results.index(min(results))]}\nAlgo Name:{current[results.index(min(results))]}\nkey:{final[results.index(min(results))][0].decode()}\nIV:{final[results.index(min(results))][1].decode()}')
+         
+        
     if event == '-display-':
         os.startfile(values['-In-'])
         
     
-    if event == '-run-' and values['-choix1-']:
+    if event == '-run-' :
         current=[]
         results=[]
         if values[checkboxs[0]] == True :
             current.append(available[0])
-            encryption(0)
+            encryption(0,values['-choix1-'])
         if values[checkboxs[1]] == True :
             current.append(available[1])
-            encryption(1)
+            encryption(1,values['-choix1-'])
         if values[checkboxs[2]] == True :
             current.append(available[2])
-            encryption(2)
+            encryption(2,values['-choix1-'])
         if values[checkboxs[3]] == True :
             current.append(available[3])
-            encryption(3)
+            encryption(3,values['-choix1-'])
         if values[checkboxs[4]] == True :
             current.append(available[4])
-            encryption(4)
+            encryption(4,values['-choix1-'])
         if values[checkboxs[5]] == True :
             current.append(available[5])
-            encryption(5)
+            encryption(5,values['-choix1-'])
         if values[checkboxs[6]] == True :
             current.append(available[6])
-            encryption(6)
+            encryption(6,values['-choix1-'])
     
         # axes=Fig22.axes
         # axes[0].plot([0,2,4],[1,3,5])
