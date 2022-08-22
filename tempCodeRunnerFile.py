@@ -1,1 +1,1 @@
-s=10, justification="r"
+,text_color="#2A325A"

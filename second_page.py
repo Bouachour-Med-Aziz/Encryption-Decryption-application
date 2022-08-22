@@ -1,13 +1,14 @@
 
 from faulthandler import enable
 from pathlib import Path
-from re import fullmatch
+from re import L, fullmatch
 from turtle import color
 from unicodedata import numeric
 import PySimpleGUI as sg
 from matplotlib.pyplot import text
-from numpy import False_, choose, size
 import os
+
+from sklearn.compose import ColumnTransformer
 
 # ------ Menu Definition ------ #
 menu_def1 = [["File", ["Command1", "Command2", "---", "Exit"]],
@@ -85,8 +86,9 @@ def main_window(t="LightGrey1", f="Calibri", s=15):
                sg.Button("Reset", s=10), sg.Button("Display Word File", pad=((160, 3), 3)), sg.Button("Run", s=8, button_color="green")],
               [sg.HorizontalSeparator()],
               ]
-
-    window = sg.Window("Application name", layout, resizable=True).Finalize()
+    
+    
+    window = sg.Window("Application name", layout, resizable=True).finalize()
     window.Maximize()
 
     while True:
