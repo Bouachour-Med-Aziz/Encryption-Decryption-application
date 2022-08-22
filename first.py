@@ -1,7 +1,6 @@
-from msilib.schema import RadioButton
+import zipfile,re
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import timeit
-from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import padding
 from cryptography.hazmat.primitives.asymmetric import rsa
@@ -9,20 +8,24 @@ from pathlib import Path
 import json
 import os
 import io
-import numpy as np
 import PySimpleGUI as sg
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 check_num=0
 state=False
 pathset=os.path.expanduser('~/Documents/settingfile.json')
+
 checkboxs=['-1-','-2-','-3-','-4-','-5-','-6-','-7-','-8-','-9-','-10-','-11-','-12-']
-list_val=[0.0]
-year = [1920,1930,1940,1950,1960,1970,1980,1990,2000,2010]
-unemployment_rate = [9.8,12,8,7.2,6.9,7,6.5,6.2,5.5,6.3]
-year2=year[::-1]
-unemployment_rate2=unemployment_rate[::-1]
+available=['TripleDES','Camellia','SM4','AES','CASTS','SEED']
 dict_default = {"setting":{"1":'15',"2":"Calibri","3":"LightGrey1"}}
+def word_reader(name):
+    docx=zipfile.ZipFile(name)
+    content=docx.read('word/document.xml').decode('utf-8')
+    cleaned = re.sub('<(.|\n)*?>','',content)
+    return cleaned
+
+
+
 def txt_reader(name):
     if Path(name).is_file():
             try:
@@ -35,14 +38,12 @@ def txt_reader(name):
 def create_bar_graph(year, unemployment_rate):
     plt.figure(figsize =(5, 4))
     var=plt.bar(year, unemployment_rate, color='red', width=0.4)
-    plt.title('Unemployment Rate Vs Year', fontsize=14)
-    plt.xlabel('Year', fontsize=14)
-    plt.ylabel('Unemployment Rate', fontsize=14)
+    plt.title('Time Vs Algorithms', fontsize=16)
     return (plt.gcf(), var,plt)
 def draw_figure(canvas, figure):
     figure_canvas_agg = FigureCanvasTkAgg(figure[0], canvas)
     figure_canvas_agg.draw()
-    figure_canvas_agg.get_tk_widget().pack(side='top', fill='both', expand=1)
+    figure_canvas_agg.get_tk_widget().pack()
     return figure_canvas_agg
 
 def button_text(p):
@@ -131,8 +132,8 @@ def main_window(w):
       [sg.Column([[sg.Frame('Available Algorithms',frame3)]]),sg.VSeparator(),sg.Column(mini_column)],
      [sg.B('Display File',key='-display-'),sg.B('Reset',key='-reset-'),sg.Push(),sg.B('Exit',key='-exit-',size=10,button_color='red'),sg.B('Run',key='-run-',size=10,button_color='green')]]
     layout =[[sg.Menu(menu_def,key='-menu-')],
-         [sg.Column(col1),sg.VSeparator(),sg.Column([[sg.Canvas(key='-canvas1-',size=(50,50))],
-                                                     [sg.Canvas(key='-canvas2-',size=(50,50))]])]]
+         [sg.Column(col1),sg.VSeparator(),sg.Column([[sg.Canvas(key='-canvas1-',size=(60,60),pad=10)],
+                                                     [sg.Canvas(key='-canvas2-',size=(60,60),pad=10)]])]]
     return sg.Window('Time-Out',layout,finalize=True)
 
 def setting_checkup():
@@ -146,17 +147,19 @@ def setting_checkup():
     with open(pathset, 'r') as f:
         data=json.load(f)
     return list(data["setting"].values())
-
+ 
 def encryption(alg):
     filename=values['-In-']
-    txt=txt_reader(filename)
-    print(len(txt))
-    x=16-len(txt)%16
-    print(x)
-    if len(txt)%16 != 0 :
-        for i in range(x):
-            txt = txt + ' '
-    print(txt)
+    if filename.split(".")[-1]=="txt":
+        txt=txt_reader(filename)
+    elif filename.split(".")[-1]=="docx":
+        txt=word_reader(filename)
+    if alg in range(6):
+        x=16-len(txt)%16
+        if len(txt)%16 != 0 :
+            for i in range(x):
+                txt = txt + ' '
+    
     txt = txt.encode()
     match alg :
         case 0:
@@ -164,7 +167,9 @@ def encryption(alg):
             iv = os.urandom(8)
             cipher = Cipher(algorithms.TripleDES(key), modes.CBC(iv))
             encryptor = cipher.encryptor()
-            ct = encryptor.update(txt) + encryptor.finalize()
+            ct0 = encryptor.update(txt) + encryptor.finalize()
+            t0=timeit.timeit(stmt="ct0",globals=locals())
+            results.append(t0)
             # decryptor = cipher.decryptor()
             # decryptor.update(ct) + decryptor.finalize()
         case 1:
@@ -172,7 +177,9 @@ def encryption(alg):
             iv = os.urandom(16)
             cipher = Cipher(algorithms.Camellia(key), modes.CBC(iv))
             encryptor = cipher.encryptor()
-            ct = encryptor.update(txt) + encryptor.finalize()
+            ct1 = encryptor.update(txt) + encryptor.finalize()
+            t1=timeit.timeit(stmt="ct1",globals=locals())
+            results.append(t1)
             # decryptor = cipher.decryptor()
             # decryptor.update(ct) + decryptor.finalize()
         case 2:
@@ -181,7 +188,9 @@ def encryption(alg):
             algorithm = algorithms.SM4(key)
             cipher = Cipher(algorithm, modes.CBC(iv))
             encryptor = cipher.encryptor()
-            ct = encryptor.update(txt) 
+            ct2 = encryptor.update(txt)
+            t2=timeit.timeit(stmt="ct2",globals=locals())
+            results.append(t2)
             # decryptor = cipher.decryptor()
             # decryptor.update(ct) + decryptor.finalize()
         case 3:
@@ -189,7 +198,9 @@ def encryption(alg):
             iv = os.urandom(16)
             cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
             encryptor = cipher.encryptor()
-            ct = encryptor.update(txt) + encryptor.finalize()
+            ct3 = encryptor.update(txt) + encryptor.finalize()
+            t3=timeit.timeit(stmt="ct3",globals=locals())
+            results.append(t3)
             # decryptor = cipher.decryptor()
             # decryptor.update(ct) + decryptor.finalize()
         case 4:
@@ -197,7 +208,9 @@ def encryption(alg):
             iv = os.urandom(8)
             cipher = Cipher(algorithms.CAST5(key), modes.CBC(iv))
             encryptor = cipher.encryptor()
-            ct = encryptor.update(txt) + encryptor.finalize()
+            ct4= encryptor.update(txt) + encryptor.finalize()
+            t4=timeit.timeit(stmt="ct4",globals=locals())
+            results.append(t4)
             # decryptor = cipher.decryptor()
             # decryptor.update(ct) + decryptor.finalize()
         case 5:
@@ -205,11 +218,12 @@ def encryption(alg):
             iv = os.urandom(16)
             cipher = Cipher(algorithms.SEED(key), modes.CBC(iv))
             encryptor = cipher.encryptor()
-            ct = encryptor.update(txt) + encryptor.finalize()
+            ct5 = encryptor.update(txt) + encryptor.finalize()
+            t5=timeit.timeit(stmt="ct5",globals=locals())
+            results.append(t5)
             # decryptor = cipher.decryptor()
             # decryptor.update(ct) + decryptor.finalize()
         case 6:
-            message = b"encrypted data"
             private_key = rsa.generate_private_key(
                 public_exponent=65537,
                 key_size=2048,)
@@ -218,54 +232,60 @@ def encryption(alg):
                 mgf=padding.MGF1(algorithm=hashes.SHA256()),
                 algorithm=hashes.SHA256(),
                 label=None))
-                
-    # key= Fernet.generate_key()
-    # f=Fernet(key)
-    test="from cryptography.fernet import Fernet;filename=values['-In-'];key= Fernet.generate_key();f=Fernet(key);from __main__ import txt_reader;txt=txt_reader(filename).strip().encode()"
-    res=timeit.timeit(stmt="f.encrypt(txt)",setup=test,number=10,globals=globals())
-    list_val.append(res)
-    plot_draw(list_val,[0.0,2.0])
-
+            
 default=setting_checkup()
 window1 = main_window(default)
 Fig22=plot_draw()
 akg=plot_draw2(Fig22,window1['-canvas1-'].TKCanvas)
-Fig23=create_bar_graph(year, unemployment_rate)
+Fig23=create_bar_graph([],[])
 akg2=draw_figure(window1['-canvas2-'].TKCanvas,Fig23)
 while True:
     event, values=window1.read()
-    if event == sg.WIN_CLOSED or event =='-exit-' :
+    if event == sg.WIN_CLOSED or event =='-exit-' or event == 'Exit':
         break
+    if event =='Save as':
+        sg.popup()
     if event == '-display-':
-        break
+        os.startfile(values['-In-'])
+        
     
     if event == '-run-' and values['-choix1-']:
+        current=[]
+        results=[]
         if values[checkboxs[0]] == True :
+            current.append(available[0])
             encryption(0)
         if values[checkboxs[1]] == True :
+            current.append(available[1])
             encryption(1)
         if values[checkboxs[2]] == True :
+            current.append(available[2])
             encryption(2)
         if values[checkboxs[3]] == True :
+            current.append(available[3])
             encryption(3)
         if values[checkboxs[4]] == True :
+            current.append(available[4])
             encryption(4)
         if values[checkboxs[5]] == True :
+            current.append(available[5])
             encryption(5)
         if values[checkboxs[6]] == True :
+            current.append(available[6])
             encryption(6)
-
-        axes=Fig22.axes
-        axes[0].plot([0,2,4],[1,3,5])
-        akg.draw()
-        akg.get_tk_widget().pack()
-        for rect,h in zip(Fig23[1],unemployment_rate2):
-            rect.set_height(h)
-        akg2.draw()
-        akg2.get_tk_widget().pack(side='top', fill='both', expand=1)
+    
+        # axes=Fig22.axes
+        # axes[0].plot([0,2,4],[1,3,5])
+        # akg.draw()
+        # akg.get_tk_widget().pack()
         Fig23[2].cla()
+        Fig23[2].bar(current,results, color='red', width=0.4)
+        plt.title('Time Vs Algorithms', fontsize=16)
+        Fig23[2].xticks(current)
+        Fig23[2].yticks(results)
         akg2.draw()
-        akg2.get_tk_widget().pack(side='top', fill='both', expand=1)
+        akg2.get_tk_widget().pack()
+        sg.popup_no_buttons(f"Best Time:{min(results)} by {current[results.index(min(results))]}\nWorst Time:{max(results)} by {current[results.index(max(results))]}\nAverage Time: {sum(results)/len(results)}",title="")
         
     if event =='-all-':
         state= not state
@@ -319,7 +339,7 @@ while True:
             window1 = main_window(default)
             Fig22=plot_draw()
             akg=plot_draw2(Fig22,window1['-canvas1-'].TKCanvas)
-            Fig23=create_bar_graph(year, unemployment_rate)
+            Fig23=create_bar_graph([],[])
             akg2=draw_figure(window1['-canvas2-'].TKCanvas,Fig23)
             
 window1.close()
