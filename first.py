@@ -1,4 +1,5 @@
 from base64 import b64decode, b64encode
+from cProfile import label
 import zipfile,re
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import timeit
@@ -9,14 +10,19 @@ from pathlib import Path
 import json
 import os
 import io
+import numpy as np
 import PySimpleGUI as sg
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 check_num=0
 state=False
+mode=False
 pathset=os.path.expanduser('~/Documents/settingfile.json')
 cipher_text=[]
 final=[]
+fichier=[]
+time=[]
+save={}
 checkboxs=['-1-','-2-','-3-','-4-','-5-','-6-','-7-']
 available=['TripleDES','Camellia','SM4','AES','CASTS','SEED','RSA']
 dict_default = {"setting":{"1":'15',"2":"Calibri","3":"LightGrey1"}}
@@ -95,7 +101,7 @@ def setting_create(y):
             [sg.Button('▼', size=(1, 1), font='Any 7', border_width=0, button_color=(sg.theme_text_color(), sg.theme_background_color()), key='-DOWN-')]])],
                 [sg.T('Font Family:'),sg.Combo(["Arial", "Baskerville", "Calibri", "Cambria", "Cambria", "Courier New","Georgia", "Goudy Old Style", "Microsoft Sans Serif", "Verdana"], default_value=y[1], key='-FONTFAMILY-')],
                 [sg.Text("Theme:"),sg.Combo(["Black", "BlueMono", "BrightColors", "Dark", "DarkBlack", "GrayGrayGray","LightBlue", "SystemDefaultForReal", "Purple", "SystemDefault"], default_value=y[2], key='-THEME-')],
-                [sg.Button("Save Current Settings", s=20),sg.Button('Cancel',key='-cancel-',size=10,button_color='red'),sg.Button('Confirme',key='-confirme-',size=10,button_color='green')]]
+                [sg.Button("Save Current Settings", s=20),sg.Button('Cancel',key='-cancel-',size=10,button_color='red'),sg.Button('Confirm',key='-confirme-',size=10,button_color='green')]]
     return sg.Window('Settings Window',set_layout,modal=True)
 
 def setting_window1(x):
@@ -153,11 +159,11 @@ def main_window(w):
                  [sg.Frame('Private key',frame6)]]
     col1=[
       [sg.Frame('Desired File',frame1)],
-      [sg.Multiline(size=(30,5),visible=False,justification='l',key='-inputs-'),sg.Push(),sg.Button('Multiple Files',key='-trigger-')],
+      [sg.pin(sg.Listbox(s=(70,5),key='-inputs-',values=[],visible=False,select_mode=sg.LISTBOX_SELECT_MODE_MULTIPLE)),sg.Push(),sg.Input(key='-link-',visible=False,enable_events=True),sg.pin(sg.Column([[sg.FilesBrowse(file_types=(("Text File","*.txt*"),("Word Files", "*.docx*"),),key='-files-',button_text='ADD',target='-link-'),sg.B('Delete',button_color='red',key='-delete-')]],visible=False,key='-ad-')),sg.Button('Multiple Files',key='-trigger-')],
       [sg.Frame('Operations',frame2)],
       [sg.Column([[sg.Frame('Available Algorithms',frame3)]]),sg.VSeparator(),sg.Column(mini_column)],
      [sg.B('Display File',key='-display-'),sg.B('Reset',key='-reset-'),sg.Push(),sg.B('Exit',key='-exit-',size=10,button_color='red'),sg.B('Run',key='-run-',size=10,button_color='green')]]
-    layout =[[sg.Menu(menu_def,key='-menu-')],
+    layout =[[sg.Menu(menu_def,key='-menu-',)],
          [sg.Column(col1),sg.VSeparator(),sg.Column([[sg.Canvas(key='-canvas1-',size=(60,60),pad=10)],
                                                      [sg.Canvas(key='-canvas2-',size=(60,60),pad=10)]])]]
     return sg.Window('Time-Out',layout,finalize=True)
@@ -175,161 +181,160 @@ def setting_checkup():
     return list(data["setting"].values())
  
 def encryption(alg,condition):
-    filename=values['-In-']
-    if filename.split(".")[-1]=="txt":
-        txt=txt_reader(filename)
-        if alg ==6 and condition==False:
-            pr_key=txt_reader(values['-pr-'])
-            pr_key=str_to_byte(pr_key)
-            pr_key=load_key(pr_key)
-    elif filename.split(".")[-1]=="docx":
-        txt=word_reader(filename)
-    if condition ==True:
-        if alg in range(6):
-            x=16-len(txt)%16
-            if len(txt)%16 != 0 :
-                for i in range(x):
-                    txt = txt + ' '
-        txt = txt.encode()
-    if condition ==False:
-        if alg in range(6):
-            txt=txt.split("\n")[0]
-        txt2=str_to_byte(txt)
-    match alg :
-        case 0:
-            if condition ==True :
-                key = os.urandom(16)
-                iv = os.urandom(8)
-                cipher = Cipher(algorithms.TripleDES(key), modes.CBC(iv))
-                encryptor = cipher.encryptor()
-                ct0 = encryptor.update(txt) + encryptor.finalize()
-                cipher_text.append(b64encode(ct0).decode('utf-8'))
-                t0=timeit.repeat(stmt="ct0",repeat=10,number=1,globals=locals())
-                results.append(sum(t0)/len(t0))
-                final.append((b64encode(key).decode('utf-8'),b64encode(iv).decode('utf-8')))
-            if condition !=True:
-                cipher = Cipher(algorithms.TripleDES(str_to_byte(values['-key-'])), modes.CBC(str_to_byte(values['-iv-'])))
-                decryptor = cipher.decryptor()
-                w=decryptor.update(txt2) + decryptor.finalize()
-                t0=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
-                results.append(sum(t0)/len(t0))
-                cipher_text.append(w)
+    for j in list(save.keys()):
+        d0={}
+        filename=j
+        if filename.split(".")[-1]=="txt":
+            txt=txt_reader(filename)
+            if alg ==6 and condition==False:
+                pr_key=txt_reader(values['-pr-'])
+                pr_key=str_to_byte(pr_key)
+                pr_key=load_key(pr_key)
+        elif filename.split(".")[-1]=="docx":
+            txt=word_reader(filename)
+        if condition ==True:
+            if alg in range(6):
+                x=16-len(txt)%16
+                if len(txt)%16 != 0 :
+                    for i in range(x):
+                        txt = txt + ' '
+            txt = txt.encode()
+        if condition ==False:
+            if alg in range(6):
+                txt=txt.split("\n")[0]
+            txt2=str_to_byte(txt)
+        match alg :
+            case 0:
+                if condition ==True :
+                    key = os.urandom(16)
+                    iv = os.urandom(8)
+                    cipher = Cipher(algorithms.TripleDES(key), modes.CBC(iv))
+                    encryptor = cipher.encryptor()
+                    ct0 = encryptor.update(txt) + encryptor.finalize()
+                    t0=timeit.repeat(stmt="ct0",repeat=10,number=1,globals=locals())
+                    d0['TripleDES']=[b64encode(ct0).decode('utf-8'),t0,sum(t0)/len(t0),(b64encode(key).decode('utf-8'),b64encode(iv).decode('utf-8'))]
+                if condition !=True:
+                    cipher = Cipher(algorithms.TripleDES(str_to_byte(values['-key-'])), modes.CBC(str_to_byte(values['-iv-'])))
+                    decryptor = cipher.decryptor()
+                    w=decryptor.update(txt2) + decryptor.finalize()
+                    t0=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
+                    time.append(t0)
+                    results.append(sum(t0)/len(t0))
+                    cipher_text.append(w)
+            case 1:
+                if condition ==True :
+                    key = os.urandom(32)
+                    iv = os.urandom(16)
+                    cipher = Cipher(algorithms.Camellia(key), modes.CBC(iv))
+                    encryptor = cipher.encryptor()
+                    ct1 = encryptor.update(txt) + encryptor.finalize()
+                    t1=timeit.repeat(stmt="ct1",repeat=10,number=1,globals=locals())
+                    d0['Camellia']=[b64encode(ct1).decode('utf-8'),t1,sum(t1)/len(t1),(b64encode(key).decode('utf-8'),b64encode(iv).decode('utf-8'))]
+                if condition !=True:
+                    cipher = Cipher(algorithms.Camellia(str_to_byte(values['-key-'])), modes.CBC(str_to_byte(values['-iv-'])))
+                    decryptor = cipher.decryptor()
+                    w=decryptor.update(txt2) + decryptor.finalize()
+                    t1=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
+                    time.append(t1)
+                    results.append(sum(t1)/len(t1))
+                    cipher_text.append(w)
+            case 2:
+                if condition ==True :
+                    key = os.urandom(16)
+                    iv = os.urandom(16)
+                    cipher = Cipher(algorithms.SM4(key), modes.CBC(iv))
+                    encryptor = cipher.encryptor()
+                    ct2 = encryptor.update(txt)
+                    t2=timeit.repeat(stmt="ct2",repeat=10,number=1,globals=locals())
+                    d0['SM4']=[b64encode(ct2).decode('utf-8'),t2,sum(t2)/len(t2),(b64encode(key).decode('utf-8'),b64encode(iv).decode('utf-8'))]
+                if condition !=True:
+                    cipher = Cipher(algorithms.SM4(str_to_byte(values['-key-'])), modes.CBC(str_to_byte(values['-iv-'])))
+                    decryptor = cipher.decryptor()
+                    w=decryptor.update(txt2) + decryptor.finalize()
+                    t2=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
+                    time.append(t2)
+                    results.append(sum(t2)/len(t2))
+                    cipher_text.append(w)
+            case 3:
+                if condition ==True :
+                    key = os.urandom(32)
+                    iv = os.urandom(16)
+                    cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
+                    encryptor = cipher.encryptor()
+                    ct3 = encryptor.update(txt) + encryptor.finalize()
+                    t3=timeit.repeat(stmt="ct3",repeat=10,number=1,globals=locals())
+                    d0['AES']=[b64encode(ct3).decode('utf-8'),t3,sum(t3)/len(t3),(b64encode(key).decode('utf-8'),b64encode(iv).decode('utf-8'))]
+                if condition !=True:
+                    cipher = Cipher(algorithms.AES(str_to_byte(values['-key-'])), modes.CBC(str_to_byte(values['-iv-'])))
+                    decryptor = cipher.decryptor()
+                    w=decryptor.update(txt2) + decryptor.finalize()
+                    t3=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
+                    time.append(t3)
+                    results.append(sum(t3)/len(t3))
+                    cipher_text.append(w)
+            case 4:
+                if condition ==True :
+                    key = os.urandom(16)
+                    iv = os.urandom(8)
+                    cipher = Cipher(algorithms.CAST5(key), modes.CBC(iv))
+                    encryptor = cipher.encryptor()
+                    ct4= encryptor.update(txt) + encryptor.finalize()
+                    t4=timeit.repeat(stmt="ct4",repeat=10,number=1,globals=locals())
+                    d0['CAST5']=[b64encode(ct4).decode('utf-8'),t4,sum(t4)/len(t4),(b64encode(key).decode('utf-8'),b64encode(iv).decode('utf-8'))]
+                if condition !=True:
+                    cipher = Cipher(algorithms.CAST5(str_to_byte(values['-key-'])), modes.CBC(str_to_byte(values['-iv-'])))
+                    decryptor = cipher.decryptor()
+                    w=decryptor.update(txt2) + decryptor.finalize()
+                    t4=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
+                    time.append(t4)
+                    results.append(sum(t4)/len(t4))
+                    cipher_text.append(w)
+            case 5:
+                if condition ==True :
+                    key = os.urandom(16)
+                    iv = os.urandom(16)
+                    cipher = Cipher(algorithms.SEED(key), modes.CBC(iv))
+                    encryptor = cipher.encryptor()
+                    ct5 = encryptor.update(txt) + encryptor.finalize()
+                    t5=timeit.repeat(stmt="ct5",repeat=10,number=1,globals=locals())
+                    d0['SEED']=[b64encode(ct5).decode('utf-8'),t5,sum(t5)/len(t5),(b64encode(key).decode('utf-8'),b64encode(iv).decode('utf-8'))]
+                if condition !=True:
+                    cipher = Cipher(algorithms.SEED(str_to_byte(values['-key-'])), modes.CBC(str_to_byte(values['-iv-'])))
+                    decryptor = cipher.decryptor()
+                    w=decryptor.update(txt2) + decryptor.finalize()
+                    t5=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
+                    time.append(t5)
+                    results.append(sum(t5)/len(t5))
+                    cipher_text.append(w)
+            case 6:
+                if condition ==True :
+                    private_key = rsa.generate_private_key(
+                        public_exponent=65537,
+                        key_size=2048,)
+                    pem=save_pr_key(private_key)
+                    public_key = private_key.public_key()
+                    ciphertext = public_key.encrypt(txt,padding.OAEP(
+                mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                algorithm=hashes.SHA256(),
+                label=None))
+                    t6=timeit.repeat(stmt="ciphertext",repeat=10,number=1,globals=locals())
+                    d0['RSA']=[b64encode(ciphertext).decode('utf-8'),t6,sum(t6)/len(t6),b64encode(pem).decode('utf-8')]
+                else:
+                    plaintext = pr_key.decrypt(
+                    txt2,
+                padding.OAEP(
+                            mgf=padding.MGF1(algorithm=hashes.SHA256()),
+                            algorithm=hashes.SHA256(),
+                            label=None))
+                    t6=timeit.repeat(stmt="plaintext",repeat=10,number=1,globals=locals())
+                    time.append(t6)
+                    results.append(sum(t6)/len(t6))
+                    cipher_text.append(plaintext)
+        n=save[j].copy()
+        n.update(d0)
+        save[j]=n     
+
                 
-        case 1:
-            if condition ==True :
-                key = os.urandom(32)
-                iv = os.urandom(16)
-                cipher = Cipher(algorithms.Camellia(key), modes.CBC(iv))
-                encryptor = cipher.encryptor()
-                ct1 = encryptor.update(txt) + encryptor.finalize()
-                cipher_text.append(b64encode(ct1).decode('utf-8'))
-                t1=timeit.repeat(stmt="ct1",repeat=10,number=1,globals=locals())
-                results.append(sum(t1)/len(t1))
-                final.append((b64encode(key).decode('utf-8'),b64encode(iv).decode('utf-8')))
-            if condition !=True:
-                cipher = Cipher(algorithms.Camellia(str_to_byte(values['-key-'])), modes.CBC(str_to_byte(values['-iv-'])))
-                decryptor = cipher.decryptor()
-                w=decryptor.update(txt2) + decryptor.finalize()
-                t1=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
-                results.append(sum(t1)/len(t1))
-                cipher_text.append(w)
-        case 2:
-            if condition ==True :
-                key = os.urandom(16)
-                iv = os.urandom(16)
-                cipher = Cipher(algorithms.SM4(key), modes.CBC(iv))
-                encryptor = cipher.encryptor()
-                ct2 = encryptor.update(txt)
-                cipher_text.append(b64encode(ct2).decode('utf-8'))
-                t2=timeit.repeat(stmt="ct2",repeat=10,number=1,globals=locals())
-                results.append(sum(t2)/len(t2))
-                final.append((b64encode(key).decode('utf-8'),b64encode(iv).decode('utf-8')))
-            if condition !=True:
-                cipher = Cipher(algorithms.SM4(str_to_byte(values['-key-'])), modes.CBC(str_to_byte(values['-iv-'])))
-                decryptor = cipher.decryptor()
-                w=decryptor.update(txt2) + decryptor.finalize()
-                t2=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
-                results.append(sum(t2)/len(t2))
-                cipher_text.append(w)
-        case 3:
-            if condition ==True :
-                key = os.urandom(32)
-                iv = os.urandom(16)
-                cipher = Cipher(algorithms.AES(key), modes.CBC(iv))
-                encryptor = cipher.encryptor()
-                ct3 = encryptor.update(txt) + encryptor.finalize()
-                cipher_text.append(b64encode(ct3).decode('utf-8'))
-                t3=timeit.repeat(stmt="ct3",repeat=10,number=1,globals=locals())
-                results.append(sum(t3)/len(t3))
-                final.append((b64encode(key).decode('utf-8'),b64encode(iv).decode('utf-8')))
-            if condition !=True:
-                cipher = Cipher(algorithms.AES(str_to_byte(values['-key-'])), modes.CBC(str_to_byte(values['-iv-'])))
-                decryptor = cipher.decryptor()
-                w=decryptor.update(txt2) + decryptor.finalize()
-                t3=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
-                results.append(sum(t3)/len(t3))
-                cipher_text.append(w)
-        case 4:
-            if condition ==True :
-                key = os.urandom(16)
-                iv = os.urandom(8)
-                cipher = Cipher(algorithms.CAST5(key), modes.CBC(iv))
-                encryptor = cipher.encryptor()
-                ct4= encryptor.update(txt) + encryptor.finalize()
-                cipher_text.append(b64encode(ct4).decode('utf-8'))
-                t4=timeit.repeat(stmt="ct4",repeat=10,number=1,globals=locals())
-                results.append(sum(t4)/len(t4))
-                final.append((b64encode(key).decode('utf-8'),b64encode(iv).decode('utf-8')))
-            if condition !=True:
-                cipher = Cipher(algorithms.CAST5(str_to_byte(values['-key-'])), modes.CBC(str_to_byte(values['-iv-'])))
-                decryptor = cipher.decryptor()
-                w=decryptor.update(txt2) + decryptor.finalize()
-                t4=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
-                results.append(sum(t4)/len(t4))
-                cipher_text.append(w)
-        case 5:
-            if condition ==True :
-                key = os.urandom(16)
-                iv = os.urandom(16)
-                cipher = Cipher(algorithms.SEED(key), modes.CBC(iv))
-                encryptor = cipher.encryptor()
-                ct5 = encryptor.update(txt) + encryptor.finalize()
-                cipher_text.append(b64encode(ct5).decode('utf-8'))
-                t5=timeit.repeat(stmt="ct5",repeat=10,number=1,globals=locals())
-                results.append(sum(t5)/len(t5))
-                final.append((b64encode(key).decode('utf-8'),b64encode(iv).decode('utf-8')))
-            if condition !=True:
-                cipher = Cipher(algorithms.SEED(str_to_byte(values['-key-'])), modes.CBC(str_to_byte(values['-iv-'])))
-                decryptor = cipher.decryptor()
-                w=decryptor.update(txt2) + decryptor.finalize()
-                t5=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
-                results.append(sum(t5)/len(t5))
-                cipher_text.append(w)
-        case 6:
-            if condition ==True :
-                private_key = rsa.generate_private_key(
-                    public_exponent=65537,
-                    key_size=2048,)
-                pem=save_pr_key(private_key)
-                final.append(b64encode(pem).decode('utf-8'))
-                public_key = private_key.public_key()
-                ciphertext = public_key.encrypt(txt,padding.OAEP(
-            mgf=padding.MGF1(algorithm=hashes.SHA256()),
-            algorithm=hashes.SHA256(),
-            label=None))
-                t6=timeit.repeat(stmt="ciphertext",repeat=10,number=1,globals=locals())
-                results.append(sum(t6)/len(t6))
-                cipher_text.append(b64encode(ciphertext).decode('utf-8'))
-            else:
-                plaintext = pr_key.decrypt(
-                txt2,
-            padding.OAEP(
-                        mgf=padding.MGF1(algorithm=hashes.SHA256()),
-                        algorithm=hashes.SHA256(),
-                        label=None))
-                t6=timeit.repeat(stmt="plaintext",repeat=10,number=1,globals=locals())
-                results.append(sum(t6)/len(t6))
-                cipher_text.append(plaintext)
                
         
 default=setting_checkup()
@@ -343,14 +348,41 @@ while True:
     if event == sg.WIN_CLOSED or event =='-exit-' or event == 'Exit':
         break
     if event =='Save':
+        time=[]
         if values['-choix1-']==True:
-            file=Path(values['-out-']+'/New encrypted file.txt')
-            file2=Path(values['-out-']+'/key file.txt')
-            if current[results.index(min(results))]!='RSA':
-                file.write_text(f'{cipher_text[results.index(min(results))]}\nAlgo Name:{current[results.index(min(results))]}\nkey:{final[results.index(min(results))][0]}\nIV:{final[results.index(min(results))][1]}')
+           
+            if mode== False:
+                file=Path(values['-out-']+'/New encrypted file.txt')
+                file2=Path(values['-out-']+'/key file.txt')
+                for i in list(save[values['-In-']].keys()):
+                    time.append(save[values['-In-']][i][2])
+                c=save[values['-In-']][list(save[values['-In-']].keys())[time.index(min(time))]]
+                c2=[list(save[values['-In-']].keys())[time.index(min(time))]] 
+                if c2[0]!='RSA':
+                    file.write_text(f'{c[0]}\nAlgo Name:{c2[0]}\nkey:{c[3][0]}\nIV:{c[3][1]}')
+                else:
+                    file.write_text(f'{c[0]}')
+                    file2.write_text(f'{c[3]}')
             else:
-                file.write_text(f'{cipher_text[results.index(min(results))]}')
-                file2.write_text(f'{final[results.index(min(results))]}')
+                s=0
+                for i in list(save.keys()):
+                    file=Path(values['-out-']+f'/New encrypted file{s}.txt')
+                    file2=Path(values['-out-']+f'/key file{s}.txt')
+                    s+=1
+                    min=0
+                    for j in list(save[i].keys()):
+                        if min==0:
+                            min=save[i][j][2]
+                            algo=(i,j)
+                        else:
+                            if save[i][j][2]<min:
+                                min=save[i][j][2]
+                                algo=(i,j)
+                    if algo[1]!='RSA':
+                        file.write_text(f'{save[algo[0]][algo[1]][0]}\nAlgo Name:{algo[1]}\nkey:{save[algo[0]][algo[1]][3][0]}\nIV:{save[algo[0]][algo[1]][3][1]}\nFile:{algo[0]}')
+                    else:
+                        file.write_text(f'{save[algo[0]][algo[1]][0]}')
+                        file2.write_text(f'{save[algo[0]][algo[1]][3]}')
         else:
             file=Path(values['-out-']+'/New decrypted file.txt')
             file.write_text(f'{cipher_text[0].decode().strip()}')
@@ -368,15 +400,17 @@ while True:
             file.write_text(f'{cipher_text[0].decode().strip()}')
     if event == '-display-':
         os.startfile(values['-In-'])
-
-            
-        
-    
     if event == '-run-' :
+        if mode == False:
+            save[values['-In-']]={}
+        if mode == True:
+            for i in fichier:
+                save[i]={}
         current=[]
         results=[]
         cipher_text=[]
         final=[]
+        time=[]
         if values[checkboxs[0]] == True :
             current.append(available[0])
             encryption(0,values['-choix1-'])
@@ -398,18 +432,65 @@ while True:
         if values[checkboxs[6]] == True :
             current.append(available[6])
             encryption(6,values['-choix1-'])
-    
-        # axes=Fig22.axes
-        # axes[0].plot([0,2,4],[1,3,5])
-        # akg.draw()
-        # akg.get_tk_widget().pack()
-        Fig23[2].cla()
-        Fig23[2].bar(current,results, color='red', width=0.4)
-        plt.title('Time Vs Algorithms', fontsize=16)
-        Fig23[2].xticks(current)
-        Fig23[2].yticks(results)
-        akg2.draw()
-        akg2.get_tk_widget().pack()
+        if mode ==False:
+            res=[]
+            for i in list(save[values['-In-']].keys()):
+                time.append(save[values['-In-']][i][2])
+            axes=Fig22.axes
+            axes[0].cla()
+            axes[0].plot(list(range(1,11)),save[values['-In-']][list(save[values['-In-']].keys())[time.index(min(time))]][1],marker='o')
+            akg.draw()
+            akg.get_tk_widget().pack()
+            Fig23[2].cla()
+            for j in list(save[values['-In-']].keys()):
+                    res.append(save[values['-In-']][j][2])
+            Fig23[2].bar(list(save[values['-In-']].keys()),res, color='red', width=0.4)
+            plt.title('Time Vs Algorithms', fontsize=16)
+            Fig23[2].xticks(list(save[values['-In-']].keys()))
+            Fig23[2].yticks(res)
+            akg2.draw()
+            akg2.get_tk_widget().pack()
+        else:
+            valve=0
+            algo=''
+            master_time=[]
+            axes=Fig22.axes
+            axes[0].cla()
+            for i in list(save.keys()):
+                time=[]
+                for j in list(save[i].keys()):
+                    if valve == 0:
+                        valve=save[i][j][2]
+                        algo=j
+                    else:
+                        if save[i][j][2]<valve:
+                            valve=save[i][j][2]
+                            algo=(i,j)
+            axes[0].plot(list(range(1,11)),save[algo[0]][algo[1]][1],marker='o',label=''.join(algo[0].split('/')[-1]).split('.')[0]+f'({algo[1]})')
+            axes[0].legend()
+            plt.title('Best File and Algorithm Match')                         
+            akg.draw()
+            akg.get_tk_widget().pack()
+            Fig23[2].cla()
+            sticks=[]
+            for i in list(save.keys()):
+                current=list(save[i].keys())
+                if sticks==[]:
+                   sticks=np.arange(len(current))
+                else:
+                    sticks=[x+0.25 for x in sticks]
+                res=[]
+                for j in list(save[i].keys()):
+                    res.append(save[i][j][2])
+                Fig23[2].bar(sticks,res, width=0.25,label=''.join(i.split('/')[-1]).split('.')[0])
+            print(current)
+            Fig23[2].xticks([r + 0.25 for r in range(len(current))],
+        current)
+            Fig23[2].legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
+          ncol=3, fancybox=True, shadow=True)
+            plt.title('Time Vs Algorithms', fontsize=16,pad=10)
+            akg2.draw()
+            akg2.get_tk_widget().pack()
         # sg.popup_no_buttons(f"Best Time:{min(results)} by {current[results.index(min(results))]}\nWorst Time:{max(results)} by {current[results.index(max(results))]}\nAverage Time: {sum(results)/len(results)}",title="")
         
     if event =='-all-':
@@ -439,16 +520,32 @@ while True:
         sg.popup('Version : 1.0", "PySimpleGUI Version :', sg.version, 'This project is made by the efforts of :',  "* Moetez Bouhlel", "* Firas Necib", "* Mohamed Aziz Bouachour",
                      title='About the application')
     if event == '-reset-':
+        window1['-key-'].update('')
+        window1['-iv-'].update('')
+        window1['-pr-'].update('')
+        window1['-out-'].update('')
         window1['-choix1-'].update(True)
-        window1['-choix2-'].update(False)
         window1['-In-'].update('')
         state=False
         for i in checkboxs:
                 window1[i].update(state)
         window1['-all-'].update(button_text(state))
     if event == '-trigger-':
+        mode=True
         window1['-inputs-'].update(visible=True)
         window1['-trigger-'].update(visible=False)
+        window1['-ad-'].update(visible=True)
+        fichier=[]
+    if event == '-link-':
+        if fichier!=values['-link-'].split(';'):
+            for i in values['-link-'].split(';'):
+                if i not in fichier:
+                    fichier.append(i)
+        window1['-inputs-'].update(fichier)
+    if  event == '-delete-':
+        for i in values['-inputs-']:
+            fichier.remove(i)
+        window1['-inputs-'].update(fichier)
     if event == 'Views':
         prev_default=default[:]
         default= setting_window1(default)
@@ -461,6 +558,8 @@ while True:
                 data["setting"]["3"]=default[2]
                 json.dump(data, f)
             window1.close()
+            fichier=[]
+            mode=False
             window1 = main_window(default)
             Fig22=plot_draw()
             akg=plot_draw2(Fig22,window1['-canvas1-'].TKCanvas)
