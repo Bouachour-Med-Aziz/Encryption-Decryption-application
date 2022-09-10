@@ -24,7 +24,7 @@ fichier=[]
 time=[]
 save={}
 checkboxs=['-1-','-2-','-3-','-4-','-5-','-6-','-7-']
-available=['TripleDES','Camellia','SM4','AES','CASTS','SEED','RSA']
+available=['TripleDES','Camellia','SM4','AES','CAST5','SEED','RSA']
 dict_default = {"setting":{"1":'15',"2":"Calibri","3":"LightGrey1"}}
 def word_reader(name):
     docx=zipfile.ZipFile(name)
@@ -143,9 +143,9 @@ def main_window(w):
 
     frame1=[[sg.Text('Input File:',justification='r'),sg.Push(),sg.Input(key='-In-'),sg.FileBrowse(file_types=(("Text File","*.txt*"),("Word Files", "*.docx*"),))],
      [sg.Text('Output Folder:',justification='r'),sg.Input(key='-out-'),sg.FolderBrowse()]]
-    frame2=[[sg.Radio("Encryption",'Gp1',key='-choix1-',default=True),sg.Radio("Decryption",'Gp1',key='-choix2-')]]
+    frame2=[[sg.Radio("Encryption",'Gp1',key='-choix1-',default=True,enable_events=True),sg.Radio("Decryption",'Gp1',key='-choix2-',enable_events=True)]]
     subframe1=[[sg.Checkbox('TripleDES',key='-1-',enable_events=True),sg.Checkbox('AES',key='-4-',enable_events=True)],
-           [sg.Checkbox('Camellia',key='-2-',enable_events=True),sg.Checkbox('CASTS',key='-5-',enable_events=True)],
+           [sg.Checkbox('Camellia',key='-2-',enable_events=True),sg.Checkbox('CAST5',key='-5-',enable_events=True)],
            [sg.Checkbox('SM4',key='-3-',enable_events=True),sg.Checkbox('SEED',key='-6-',enable_events=True)]]
     subframe2=[[sg.Checkbox('RSA',key='-7-',enable_events=True)]]
     frame3=[[sg.Button('Select all algorithms',key='-all-',s=(19,1))],
@@ -159,7 +159,7 @@ def main_window(w):
                  [sg.Frame('Private key',frame6)]]
     col1=[
       [sg.Frame('Desired File',frame1)],
-      [sg.pin(sg.Listbox(s=(70,5),key='-inputs-',values=[],visible=False,select_mode=sg.LISTBOX_SELECT_MODE_MULTIPLE)),sg.Push(),sg.Input(key='-link-',visible=False,enable_events=True),sg.pin(sg.Column([[sg.FilesBrowse(file_types=(("Text File","*.txt*"),("Word Files", "*.docx*"),),key='-files-',button_text='ADD',target='-link-'),sg.B('Delete',button_color='red',key='-delete-')]],visible=False,key='-ad-')),sg.Button('Multiple Files',key='-trigger-')],
+      [sg.pin(sg.Listbox(s=(70,5),key='-inputs-',values=[],visible=False,select_mode=sg.LISTBOX_SELECT_MODE_MULTIPLE)),sg.Push(),sg.pin(sg.Column([[sg.FilesBrowse(file_types=(("Text File","*.txt*"),("Word Files", "*.docx*"),),key='-files-',button_text='ADD',target='-link-')],[sg.B('Delete',button_color='red',key='-delete-')],[sg.B('Single Mode',key='-mode-')]],visible=False,key='-ad-')),sg.Input(key='-link-',visible=False,enable_events=True),sg.Button('Multiple Files',key='-trigger-')],
       [sg.Frame('Operations',frame2)],
       [sg.Column([[sg.Frame('Available Algorithms',frame3)]]),sg.VSeparator(),sg.Column(mini_column)],
      [sg.B('Display File',key='-display-'),sg.B('Reset',key='-reset-'),sg.Push(),sg.B('Exit',key='-exit-',size=10,button_color='red'),sg.B('Run',key='-run-',size=10,button_color='green')]]
@@ -218,9 +218,7 @@ def encryption(alg,condition):
                     decryptor = cipher.decryptor()
                     w=decryptor.update(txt2) + decryptor.finalize()
                     t0=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
-                    time.append(t0)
-                    results.append(sum(t0)/len(t0))
-                    cipher_text.append(w)
+                    d0['TripleDES']=[w,t0,sum(t0)/len(t0)]
             case 1:
                 if condition ==True :
                     key = os.urandom(32)
@@ -235,9 +233,7 @@ def encryption(alg,condition):
                     decryptor = cipher.decryptor()
                     w=decryptor.update(txt2) + decryptor.finalize()
                     t1=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
-                    time.append(t1)
-                    results.append(sum(t1)/len(t1))
-                    cipher_text.append(w)
+                    d0['Camellia']=[w,t1,sum(t1)/len(t1)]
             case 2:
                 if condition ==True :
                     key = os.urandom(16)
@@ -252,9 +248,7 @@ def encryption(alg,condition):
                     decryptor = cipher.decryptor()
                     w=decryptor.update(txt2) + decryptor.finalize()
                     t2=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
-                    time.append(t2)
-                    results.append(sum(t2)/len(t2))
-                    cipher_text.append(w)
+                    d0['SM4']=[w,t2,sum(t2)/len(t2)]
             case 3:
                 if condition ==True :
                     key = os.urandom(32)
@@ -269,9 +263,7 @@ def encryption(alg,condition):
                     decryptor = cipher.decryptor()
                     w=decryptor.update(txt2) + decryptor.finalize()
                     t3=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
-                    time.append(t3)
-                    results.append(sum(t3)/len(t3))
-                    cipher_text.append(w)
+                    d0['AES']=[w,t3,sum(t3)/len(t3)]
             case 4:
                 if condition ==True :
                     key = os.urandom(16)
@@ -286,9 +278,7 @@ def encryption(alg,condition):
                     decryptor = cipher.decryptor()
                     w=decryptor.update(txt2) + decryptor.finalize()
                     t4=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
-                    time.append(t4)
-                    results.append(sum(t4)/len(t4))
-                    cipher_text.append(w)
+                    d0['CAST5']=[w,t4,sum(t4)/len(t4)]
             case 5:
                 if condition ==True :
                     key = os.urandom(16)
@@ -306,6 +296,7 @@ def encryption(alg,condition):
                     time.append(t5)
                     results.append(sum(t5)/len(t5))
                     cipher_text.append(w)
+                    d0['SEED']=[w,t5,sum(t5)/len(t5)]
             case 6:
                 if condition ==True :
                     private_key = rsa.generate_private_key(
@@ -330,6 +321,7 @@ def encryption(alg,condition):
                     time.append(t6)
                     results.append(sum(t6)/len(t6))
                     cipher_text.append(plaintext)
+                    d0['SEED']=[plaintext,t6,sum(t6)/len(t6)]
         n=save[j].copy()
         n.update(d0)
         save[j]=n     
@@ -347,156 +339,196 @@ while True:
     event, values=window1.read()
     if event == sg.WIN_CLOSED or event =='-exit-' or event == 'Exit':
         break
+    if event == '-mode-':
+        mode= not mode
+        if mode == False:
+            window1['-mode-'].update('Single Mode')
+        else:
+            window1['-mode-'].update('Multi Mode')
     if event =='Save':
-        time=[]
-        if values['-choix1-']==True:
-           
-            if mode== False:
-                file=Path(values['-out-']+'/New encrypted file.txt')
-                file2=Path(values['-out-']+'/key file.txt')
+        if save=={}:
+            sg.popup_ok('Please encrypt/decrypt a file first ')
+        else:
+            if values['-out-']=='':
+                sg.popup_ok('Please choose a folder')
+            else:
+                time=[]
+                if values['-choix1-']==True:
+                    if mode== False:
+                        file=Path(values['-out-']+'/New encrypted file.txt')
+                        file2=Path(values['-out-']+'/key file.txt')
+                        for i in list(save[values['-In-']].keys()):
+                            time.append(save[values['-In-']][i][2])
+                        c=save[values['-In-']][list(save[values['-In-']].keys())[time.index(min(time))]]
+                        c2=[list(save[values['-In-']].keys())[time.index(min(time))]] 
+                        if c2[0]!='RSA':
+                            file.write_text(f'{c[0]}\nAlgo Name:{c2[0]}\nkey:{c[3][0]}\nIV:{c[3][1]}')
+                        else:
+                            file.write_text(f'{c[0]}')
+                            file2.write_text(f'{c[3]}')
+                    else:
+                        s=0
+                        for i in list(save.keys()):
+                            file=Path(values['-out-']+f'/New encrypted file{s}.txt')
+                            file2=Path(values['-out-']+f'/key file{s}.txt')
+                            s+=1
+                            min=0
+                            for j in list(save[i].keys()):
+                                if min==0:
+                                    min=save[i][j][2]
+                                    algo=(i,j)
+                                else:
+                                    if save[i][j][2]<min:
+                                        min=save[i][j][2]
+                                        algo=(i,j)
+                            if algo[1]!='RSA':
+                                file.write_text(f'{save[algo[0]][algo[1]][0]}\nAlgo Name:{algo[1]}\nkey:{save[algo[0]][algo[1]][3][0]}\nIV:{save[algo[0]][algo[1]][3][1]}\nFile:{algo[0]}')
+                            else:
+                                file.write_text(f'{save[algo[0]][algo[1]][0]}')
+                                file2.write_text(f'{save[algo[0]][algo[1]][3]}')
+                else:
+                    c=save[values['-In-']][list(save[values['-In-']].keys())[0]][0]
+                    file=Path(values['-out-']+'/New decrypted file.txt')
+                    file.write_text(f'{c.decode().strip()}')
+        if event =='Save as':
+            if save=={}:
+                sg.popup_ok('Please encrypt/decrypt a file first ')
+            else:
+                time=[]
                 for i in list(save[values['-In-']].keys()):
-                    time.append(save[values['-In-']][i][2])
+                        time.append(save[values['-In-']][i][2])
                 c=save[values['-In-']][list(save[values['-In-']].keys())[time.index(min(time))]]
                 c2=[list(save[values['-In-']].keys())[time.index(min(time))]] 
-                if c2[0]!='RSA':
-                    file.write_text(f'{c[0]}\nAlgo Name:{c2[0]}\nkey:{c[3][0]}\nIV:{c[3][1]}')
-                else:
-                    file.write_text(f'{c[0]}')
-                    file2.write_text(f'{c[3]}')
-            else:
-                s=0
-                for i in list(save.keys()):
-                    file=Path(values['-out-']+f'/New encrypted file{s}.txt')
-                    file2=Path(values['-out-']+f'/key file{s}.txt')
-                    s+=1
-                    min=0
-                    for j in list(save[i].keys()):
-                        if min==0:
-                            min=save[i][j][2]
-                            algo=(i,j)
-                        else:
-                            if save[i][j][2]<min:
-                                min=save[i][j][2]
-                                algo=(i,j)
-                    if algo[1]!='RSA':
-                        file.write_text(f'{save[algo[0]][algo[1]][0]}\nAlgo Name:{algo[1]}\nkey:{save[algo[0]][algo[1]][3][0]}\nIV:{save[algo[0]][algo[1]][3][1]}\nFile:{algo[0]}')
+                file_path=sg.popup_get_file('Save as',no_window=True,save_as=True,file_types=(("Text File","*.txt*"),))+'.txt'
+                file=Path(file_path)
+                file2=Path('/'.join(file_path.split("/")[:-1]) +'/key file.txt')
+                if values['-choix1-']==True:
+                    if c2[0]!='RSA':
+                        file.write_text(f'{c[0]}\nAlgo Name:{c2[0]}\nkey:{c[3][0]}\nIV:{c[3][1]}')
                     else:
-                        file.write_text(f'{save[algo[0]][algo[1]][0]}')
-                        file2.write_text(f'{save[algo[0]][algo[1]][3]}')
-        else:
-            file=Path(values['-out-']+'/New decrypted file.txt')
-            file.write_text(f'{cipher_text[0].decode().strip()}')
-    if event =='Save as':
-        file_path=sg.popup_get_file('Save as',no_window=True,save_as=True,file_types=(("Text File","*.txt*"),))+'.txt'
-        file=Path(file_path)
-        file2=Path('/'.join(file_path.split("/")[:-1]) +'/key file.txt')
-        if values['-choix1-']==True:
-            if current[results.index(min(results))]!='RSA':
-                file.write_text(f'{cipher_text[results.index(min(results))]}\nAlgo Name:{current[results.index(min(results))]}\nkey:{final[results.index(min(results))][0]}\nIV:{final[results.index(min(results))][1]}')
-            else:
-                file.write_text(f'{cipher_text[results.index(min(results))]}')
-                file2.write_text(f'{final[results.index(min(results))]}')
-        else:
-            file.write_text(f'{cipher_text[0].decode().strip()}')
+                        file.write_text(f'{c[0]}')
+                        file2.write_text(f'{c[3]}')
+                else:
+                    c=save[values['-In-']][list(save[values['-In-']].keys())[0]][0]
+                    file.write_text(f'{c.decode().strip()}')
     if event == '-display-':
-        os.startfile(values['-In-'])
-    if event == '-run-' :
-        if mode == False:
-            save[values['-In-']]={}
-        if mode == True:
-            for i in fichier:
-                save[i]={}
-        current=[]
-        results=[]
-        cipher_text=[]
-        final=[]
-        time=[]
-        if values[checkboxs[0]] == True :
-            current.append(available[0])
-            encryption(0,values['-choix1-'])
-        if values[checkboxs[1]] == True :
-            current.append(available[1])
-            encryption(1,values['-choix1-'])
-        if values[checkboxs[2]] == True :
-            current.append(available[2])
-            encryption(2,values['-choix1-'])
-        if values[checkboxs[3]] == True :
-            current.append(available[3])
-            encryption(3,values['-choix1-'])
-        if values[checkboxs[4]] == True :
-            current.append(available[4])
-            encryption(4,values['-choix1-'])
-        if values[checkboxs[5]] == True :
-            current.append(available[5])
-            encryption(5,values['-choix1-'])
-        if values[checkboxs[6]] == True :
-            current.append(available[6])
-            encryption(6,values['-choix1-'])
-        if mode ==False:
-            res=[]
-            for i in list(save[values['-In-']].keys()):
-                time.append(save[values['-In-']][i][2])
-            axes=Fig22.axes
-            axes[0].cla()
-            axes[0].plot(list(range(1,11)),save[values['-In-']][list(save[values['-In-']].keys())[time.index(min(time))]][1],marker='o')
-            akg.draw()
-            akg.get_tk_widget().pack()
-            Fig23[2].cla()
-            for j in list(save[values['-In-']].keys()):
-                    res.append(save[values['-In-']][j][2])
-            Fig23[2].bar(list(save[values['-In-']].keys()),res, color='red', width=0.4)
-            plt.title('Time Vs Algorithms', fontsize=16)
-            Fig23[2].xticks(list(save[values['-In-']].keys()))
-            Fig23[2].yticks(res)
-            akg2.draw()
-            akg2.get_tk_widget().pack()
+        if (values['-In-']=='' and mode==False):
+            sg.popup_ok('Please choose a file')
         else:
-            valve=0
-            algo=''
-            master_time=[]
-            axes=Fig22.axes
-            axes[0].cla()
-            for i in list(save.keys()):
+            os.startfile(values['-In-'])
+    if event == '-run-' :
+        if (values['-In-']=='' and mode==False) or (fichier==[] and mode==True):
+            sg.popup_ok('Please choose a file')
+        else:
+            y=0
+            for i in checkboxs:
+                if values[i]==False:
+                    y+=1
+            if y==len(checkboxs):
+                sg.popup_ok('Please choose an algorithm')
+            else:
+                if mode == False:
+                    save[values['-In-']]={}
+                if mode == True:
+                    for i in fichier:
+                        save[i]={}
+                current=[]
+                results=[]
+                cipher_text=[]
+                final=[]
                 time=[]
-                for j in list(save[i].keys()):
-                    if valve == 0:
-                        valve=save[i][j][2]
-                        algo=j
-                    else:
-                        if save[i][j][2]<valve:
-                            valve=save[i][j][2]
-                            algo=(i,j)
-            axes[0].plot(list(range(1,11)),save[algo[0]][algo[1]][1],marker='o',label=''.join(algo[0].split('/')[-1]).split('.')[0]+f'({algo[1]})')
-            axes[0].legend()
-            plt.title('Best File and Algorithm Match')                         
-            akg.draw()
-            akg.get_tk_widget().pack()
-            Fig23[2].cla()
-            sticks=[]
-            for i in list(save.keys()):
-                current=list(save[i].keys())
-                if sticks==[]:
-                   sticks=np.arange(len(current))
+                if values[checkboxs[0]] == True :
+                    current.append(available[0])
+                    encryption(0,values['-choix1-'])
+                if values[checkboxs[1]] == True :
+                    current.append(available[1])
+                    encryption(1,values['-choix1-'])
+                if values[checkboxs[2]] == True :
+                    current.append(available[2])
+                    encryption(2,values['-choix1-'])
+                if values[checkboxs[3]] == True :
+                    current.append(available[3])
+                    encryption(3,values['-choix1-'])
+                if values[checkboxs[4]] == True :
+                    current.append(available[4])
+                    encryption(4,values['-choix1-'])
+                if values[checkboxs[5]] == True :
+                    current.append(available[5])
+                    encryption(5,values['-choix1-'])
+                if values[checkboxs[6]] == True :
+                    current.append(available[6])
+                    encryption(6,values['-choix1-'])
+                if mode ==False:
+                    res=[]
+                    for i in list(save[values['-In-']].keys()):
+                        time.append(save[values['-In-']][i][2])
+                    axes=Fig22.axes
+                    axes[0].cla()
+                    axes[0].plot(list(range(1,11)),save[values['-In-']][list(save[values['-In-']].keys())[time.index(min(time))]][1],marker='o')
+                    akg.draw()
+                    akg.get_tk_widget().pack()
+                    Fig23[2].cla()
+                    for j in list(save[values['-In-']].keys()):
+                        res.append(save[values['-In-']][j][2])
+                    Fig23[2].bar(list(save[values['-In-']].keys()),res, color='red', width=0.4)
+                    plt.title('Time Vs Algorithms', fontsize=16)
+                    Fig23[2].xticks(list(save[values['-In-']].keys()))
+                    Fig23[2].yticks(res)
+                    akg2.draw()
+                    akg2.get_tk_widget().pack()
                 else:
-                    sticks=[x+0.25 for x in sticks]
-                res=[]
-                for j in list(save[i].keys()):
-                    res.append(save[i][j][2])
-                Fig23[2].bar(sticks,res, width=0.25,label=''.join(i.split('/')[-1]).split('.')[0])
-            print(current)
-            Fig23[2].xticks([r + 0.25 for r in range(len(current))],
+                    valve=0
+                    algo=''
+                    master_time=[]
+                    axes=Fig22.axes
+                    axes[0].cla()
+                    for i in list(save.keys()):
+                        time=[]
+                        for j in list(save[i].keys()):
+                            if valve == 0:
+                                valve=save[i][j][2]
+                                algo=j
+                            else:
+                                if save[i][j][2]<valve:
+                                    valve=save[i][j][2]
+                                    algo=(i,j)
+                    axes[0].plot(list(range(1,11)),save[algo[0]][algo[1]][1],marker='o',label=''.join(algo[0].split('/')[-1]).split('.')[0]+f'({algo[1]})')
+                    axes[0].legend()
+                    plt.title('Best File and Algorithm Match')                         
+                    akg.draw()
+                    akg.get_tk_widget().pack()
+                    Fig23[2].cla()
+                    sticks=[]
+                    for i in list(save.keys()):
+                        current=list(save[i].keys())
+                        if sticks==[]:
+                            sticks=np.arange(len(current))
+                        else:
+                            sticks=[x+0.25 for x in sticks]
+                        res=[]
+                        for j in list(save[i].keys()):
+                            res.append(save[i][j][2])
+                        Fig23[2].bar(sticks,res, width=0.25,label=''.join(i.split('/')[-1]).split('.')[0])
+                    Fig23[2].xticks([r + 0.25 for r in range(len(current))],
         current)
-            Fig23[2].legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
+                    Fig23[2].legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
           ncol=3, fancybox=True, shadow=True)
-            plt.title('Time Vs Algorithms', fontsize=16,pad=10)
-            akg2.draw()
-            akg2.get_tk_widget().pack()
+                    plt.title('Time Vs Algorithms', fontsize=16,pad=10)
+                    akg2.draw()
+                    akg2.get_tk_widget().pack()
         # sg.popup_no_buttons(f"Best Time:{min(results)} by {current[results.index(min(results))]}\nWorst Time:{max(results)} by {current[results.index(max(results))]}\nAverage Time: {sum(results)/len(results)}",title="")
-        
+    if event=='-choix1-'or event=='-choix2-':
+        for i in checkboxs:
+            window1[i].update(False)
+        state=False
+        window1['-all-'].update(button_text(state))
     if event =='-all-':
         state= not state
-        for i in checkboxs:
+        if values['-choix1-']==True:
+            for i in checkboxs:
                 window1[i].update(state)
+        else:
+            window1['-1-'].update(state)
         window1['-all-'].update(button_text(state))
     if event in checkboxs:
         i=0
@@ -513,7 +545,15 @@ while True:
         else: 
             if check_num==0:
                 state=False  
-        window1['-all-'].update(button_text(state))        
+        window1['-all-'].update(button_text(state))
+        if values['-choix2-']==True:
+            l=[]
+            for i in checkboxs:
+                if values[i]==True:
+                    for j in checkboxs:
+                        if j != i:
+                            window1[j].update(False)
+                            window1[i].update(True)
     if event == 'About..':
         sg.popup('This project have as purpose to help you to choose the best algorithm to encrypt/decrypt your file. We provide different types of algorithms which you can visuale in a graphic curve.',title='Help')
     if event == 'About...':
