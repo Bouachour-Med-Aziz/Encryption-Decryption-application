@@ -1,5 +1,4 @@
 from base64 import b64decode, b64encode
-from cProfile import label
 import zipfile,re
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 import timeit
@@ -19,8 +18,6 @@ state=False
 mode=False
 first= True
 pathset=os.path.expanduser('~/Documents/settingfile.json')
-cipher_text=[]
-final=[]
 fichier=[]
 l=[]
 time=[]
@@ -28,39 +25,32 @@ save={}
 checkboxs=['-1-','-2-','-3-','-4-','-5-','-6-','-7-']
 available=['TripleDES','Camellia','SM4','AES','CAST5','SEED','RSA']
 dict_default = {"setting":{"1":'15',"2":"Calibri","3":"LightGrey1"}}
+
 def word_reader(name):
     docx=zipfile.ZipFile(name)
     content=docx.read('word/document.xml').decode('utf-8')
     cleaned = re.sub('<(.|\n)*?>','',content)
     return cleaned
-# def most_frequent(List):
-#     counter = 0
-#     num = List[0]
-     
-#     for i in List:
-#         curr_frequency = List.count(i)
-#         if(curr_frequency> counter):
-#             counter = curr_frequency
-#             num = i
- 
-#     return num
+
 def load_key(content):
     private_key = load_pem_private_key(content, None)
     return private_key
+
 def save_pr_key(pr):
     how=pr.private_bytes(encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.TraditionalOpenSSL,
         encryption_algorithm=serialization.NoEncryption())
     return how
+
 def save_pu_key(pu):
     how=pu.public_bytes(encoding=serialization.Encoding.OpenSSH,
         format=serialization.PublicFormat.OpenSSH)
     return how
+
 def str_to_byte(ob):
     st=ob.encode('utf-8')
     st=b64decode(st)
     return st
-    
 
 def txt_reader(name):
     if Path(name).is_file():
@@ -76,6 +66,7 @@ def create_bar_graph(year, unemployment_rate):
     var=plt.bar(year, unemployment_rate, color='red', width=0.4)
     plt.title('Time Vs Algorithms', fontsize=16)
     return (plt.gcf(), var,plt)
+
 def draw_figure(canvas, figure):
     figure_canvas_agg = FigureCanvasTkAgg(figure[0], canvas)
     figure_canvas_agg.draw()
@@ -86,15 +77,18 @@ def button_text(p):
     if p==False:
         return 'Select all algorithms'
     return 'Deselect all algorithms'
+
 def plot_draw(z=[],n=[]):
     fig =plt.figure(figsize=(5,4))
     fig.add_subplot(111).plot(z,n)
     return fig
+
 def plot_draw2(fig,canvas):
     figure_canvas_agg = FigureCanvasTkAgg(fig,canvas)
     figure_canvas_agg.draw()
     figure_canvas_agg.get_tk_widget().pack()
     return figure_canvas_agg
+
 def setting_create(y):
     sg.set_options(font=(y[1],y[0]))
     sg.theme(y[2])
@@ -111,8 +105,10 @@ def setting_window1(x):
     window2 =setting_create(x)
     while True:
         event, values = window2.read()
-        if event ==sg.WINDOW_CLOSED or event=='-cancel-':
+        if event ==sg.WINDOW_CLOSED or event=='-cancel-' :
             z=x[:]
+            break
+        if event == '-confirme-':
             break
         counter = int(values['-fontsize-'])
         if event == '-UP-':
@@ -129,12 +125,9 @@ def setting_window1(x):
             else:
                 z=[values['-fontsize-'],values['-FONTFAMILY-'],values['-THEME-']]
                 sg.popup_no_titlebar('Setting saved')
-                window2.close()
-                window2 =setting_create(z)
-        if event == '-confirme-':
-            break
     window2.close()
     return z
+
 def main_window(w):
     sg.set_options(font=(w[1],w[0]))
     sg.theme(w[2])
@@ -142,7 +135,6 @@ def main_window(w):
           ['Settings',['Views']],
           ['Credits',['About...']],
           ['Help',['About..']]]
-
     frame1=[[sg.Text('Input File:',justification='r'),sg.Push(),sg.Input(key='-In-'),sg.FileBrowse(file_types=(("Text File","*.txt*"),("Word Files", "*.docx*"),))],
      [sg.Text('Output Folder:',justification='r'),sg.Input(key='-out-'),sg.FolderBrowse()]]
     frame2=[[sg.Radio("Encryption",'Gp1',key='-choix1-',default=True,enable_events=True),sg.Radio("Decryption",'Gp1',key='-choix2-',enable_events=True)]]
@@ -165,15 +157,14 @@ def main_window(w):
       [sg.Frame('Operations',frame2)],
       [sg.Column([[sg.Frame('Available Algorithms',frame3)]]),sg.VSeparator(),sg.Column(mini_column)],
      [sg.B('Display File',key='-display-'),sg.B('Reset',key='-reset-'),sg.Push(),sg.B('Exit',key='-exit-',size=10,button_color='red'),sg.B('Run',key='-run-',size=10,button_color='green')]]
-    layout =[[sg.Menu(menu_def,key='-menu-',)],
+    layout =[[sg.MenubarCustom(menu_def,key='-menu-',tearoff=False)],
          [sg.Column(col1),sg.VSeparator(),sg.Column([[sg.Canvas(key='-canvas1-',size=(60,60),pad=10)],
                                                      [sg.Canvas(key='-canvas2-',size=(60,60),pad=10)]])]]
-    return sg.Window('Time-Out',layout,finalize=True)
+    return sg.Window('Time-Out',layout,finalize=True,use_custom_titlebar=True)
 
 def setting_checkup():
     if os.path.isfile(pathset) and os.access(pathset,os.R_OK):
         print ("File exists and is readable")
-       
     else:
         print ("Either file is missing or is not readable, creating file...")
         with io.open(os.path.join(os.path.expanduser('~/Documents'),'settingfile.json'),'w') as f:
@@ -320,31 +311,30 @@ def encryption(alg,condition):
                     t6=timeit.repeat(stmt="plaintext",repeat=10,number=1,globals=locals())
                     time.append(t6)
                     results.append(sum(t6)/len(t6))
-                    cipher_text.append(plaintext)
                     d0['SEED']=[plaintext,t6,sum(t6)/len(t6)]
         n=save[j].copy()
         n.update(d0)
         save[j]=n     
-
-                
-               
-        
+ 
 default=setting_checkup()
 window1 = main_window(default)
 Fig22=plot_draw()
 akg=plot_draw2(Fig22,window1['-canvas1-'].TKCanvas)
 Fig23=create_bar_graph([],[])
 akg2=draw_figure(window1['-canvas2-'].TKCanvas,Fig23)
+
 while True:
     event, values=window1.read()
     if event == sg.WIN_CLOSED or event =='-exit-' or event == 'Exit':
         break
+    
     if event == '-mode-':
         mode= not mode
         if mode == False:
             window1['-mode-'].update('Multi Mode')
         if mode == True:
             window1['-mode-'].update('Single Mode')
+            
     if event =='Save':
         if save=={}:
             sg.popup_ok('Please encrypt/decrypt a file first ')
@@ -390,6 +380,7 @@ while True:
                     c=save[values['-In-']][list(save[values['-In-']].keys())[0]][0]
                     file=Path(values['-out-']+'/New decrypted file.txt')
                     file.write_text(f'{c.decode().strip()}')
+                    
         if event =='Save as':
             if save=={}:
                 sg.popup_ok('Please encrypt/decrypt a file first ')
@@ -411,11 +402,13 @@ while True:
                 else:
                     c=save[values['-In-']][list(save[values['-In-']].keys())[0]][0]
                     file.write_text(f'{c.decode().strip()}')
+
     if event == '-display-':
         if (values['-In-']=='' and mode==False):
             sg.popup_ok('Please choose a file')
         else:
             os.startfile(values['-In-'])
+
     if event == '-run-' :
         if (values['-In-']=='' and mode==False) or (fichier==[] and mode==True):
             sg.popup_ok('Please choose a file')
@@ -443,29 +436,20 @@ while True:
                                     save[i]={}
                             current=[]
                             results=[]
-                            cipher_text=[]
-                            final=[]
                             time=[]
                             if values[checkboxs[0]] == True :
-                                current.append(available[0])
                                 encryption(0,values['-choix1-'])
                             if values[checkboxs[1]] == True :
-                                current.append(available[1])
                                 encryption(1,values['-choix1-'])
                             if values[checkboxs[2]] == True :
-                                current.append(available[2])
                                 encryption(2,values['-choix1-'])
                             if values[checkboxs[3]] == True :
-                                current.append(available[3])
                                 encryption(3,values['-choix1-'])
                             if values[checkboxs[4]] == True :
-                                current.append(available[4])
                                 encryption(4,values['-choix1-'])
                             if values[checkboxs[5]] == True :
-                                current.append(available[5])
                                 encryption(5,values['-choix1-'])
                             if values[checkboxs[6]] == True :
-                                current.append(available[6])
                                 encryption(6,values['-choix1-'])
                             if mode ==False:
                                 res=[]
@@ -532,11 +516,13 @@ while True:
                                 akg2.draw()
                                 akg2.get_tk_widget().pack()
                                 sg.popup_no_buttons(message,title="")
+                                
     if event=='-choix1-'or event=='-choix2-':
         for i in checkboxs:
             window1[i].update(False)
         state=False
         window1['-all-'].update(button_text(state))
+        
     if event =='-all-':
         state= not state
         if values['-choix1-']==True:
@@ -545,6 +531,7 @@ while True:
         else:
             window1['-1-'].update(state)
         window1['-all-'].update(button_text(state))
+        
     if event in checkboxs:
         i=0
         while i <=len(checkboxs)-1:
@@ -561,13 +548,14 @@ while True:
             if check_num==0:
                 state=False  
         window1['-all-'].update(button_text(state))
-                        
-                    
+                         
     if event == 'About..':
         sg.popup('This project have as purpose to help you to choose the best algorithm to encrypt/decrypt your file. We provide different types of algorithms which you can visuale in a graphic curve.',title='Help')
+    
     if event == 'About...':
         sg.popup('Version : 1.0", "PySimpleGUI Version :', sg.version, 'This project is made by the efforts of :',  "* Moetez Bouhlel", "* Firas Necib", "* Mohamed Aziz Bouachour",
                      title='About the application')
+    
     if event == '-reset-':
         window1['-key-'].update('')
         window1['-iv-'].update('')
@@ -581,22 +569,26 @@ while True:
         for i in checkboxs:
                 window1[i].update(state)
         window1['-all-'].update(button_text(state))
+        
     if event == '-trigger-':
         mode=True
         window1['-inputs-'].update(visible=True)
         window1['-trigger-'].update(visible=False)
         window1['-ad-'].update(visible=True)
         fichier=[]
+    
     if event == '-link-':
         if fichier!=values['-link-'].split(';'):
             for i in values['-link-'].split(';'):
                 if i not in fichier:
                     fichier.append(i)
         window1['-inputs-'].update(fichier)
+    
     if  event == '-delete-':
         for i in values['-inputs-']:
             fichier.remove(i)
         window1['-inputs-'].update(fichier)
+    
     if event == 'Views':
         prev_default=default[:]
         default= setting_window1(default)
