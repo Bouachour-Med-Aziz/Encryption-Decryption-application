@@ -17,10 +17,12 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 check_num=0
 state=False
 mode=False
+first= True
 pathset=os.path.expanduser('~/Documents/settingfile.json')
 cipher_text=[]
 final=[]
 fichier=[]
+l=[]
 time=[]
 save={}
 checkboxs=['-1-','-2-','-3-','-4-','-5-','-6-','-7-']
@@ -191,6 +193,7 @@ def encryption(alg,condition):
                 pr_key=str_to_byte(pr_key)
                 pr_key=load_key(pr_key)
         elif filename.split(".")[-1]=="docx":
+            print(filename)
             txt=word_reader(filename)
         if condition ==True:
             if alg in range(6):
@@ -293,9 +296,6 @@ def encryption(alg,condition):
                     decryptor = cipher.decryptor()
                     w=decryptor.update(txt2) + decryptor.finalize()
                     t5=timeit.repeat(stmt="w",repeat=10,number=1,globals=locals())
-                    time.append(t5)
-                    results.append(sum(t5)/len(t5))
-                    cipher_text.append(w)
                     d0['SEED']=[w,t5,sum(t5)/len(t5)]
             case 6:
                 if condition ==True :
@@ -342,9 +342,9 @@ while True:
     if event == '-mode-':
         mode= not mode
         if mode == False:
-            window1['-mode-'].update('Single Mode')
-        else:
             window1['-mode-'].update('Multi Mode')
+        if mode == True:
+            window1['-mode-'].update('Single Mode')
     if event =='Save':
         if save=={}:
             sg.popup_ok('Please encrypt/decrypt a file first ')
@@ -427,96 +427,111 @@ while True:
             if y==len(checkboxs):
                 sg.popup_ok('Please choose an algorithm')
             else:
-                if mode == False:
-                    save[values['-In-']]={}
-                if mode == True:
-                    for i in fichier:
-                        save[i]={}
-                current=[]
-                results=[]
-                cipher_text=[]
-                final=[]
-                time=[]
-                if values[checkboxs[0]] == True :
-                    current.append(available[0])
-                    encryption(0,values['-choix1-'])
-                if values[checkboxs[1]] == True :
-                    current.append(available[1])
-                    encryption(1,values['-choix1-'])
-                if values[checkboxs[2]] == True :
-                    current.append(available[2])
-                    encryption(2,values['-choix1-'])
-                if values[checkboxs[3]] == True :
-                    current.append(available[3])
-                    encryption(3,values['-choix1-'])
-                if values[checkboxs[4]] == True :
-                    current.append(available[4])
-                    encryption(4,values['-choix1-'])
-                if values[checkboxs[5]] == True :
-                    current.append(available[5])
-                    encryption(5,values['-choix1-'])
-                if values[checkboxs[6]] == True :
-                    current.append(available[6])
-                    encryption(6,values['-choix1-'])
-                if mode ==False:
-                    res=[]
-                    for i in list(save[values['-In-']].keys()):
-                        time.append(save[values['-In-']][i][2])
-                    axes=Fig22.axes
-                    axes[0].cla()
-                    axes[0].plot(list(range(1,11)),save[values['-In-']][list(save[values['-In-']].keys())[time.index(min(time))]][1],marker='o')
-                    akg.draw()
-                    akg.get_tk_widget().pack()
-                    Fig23[2].cla()
-                    for j in list(save[values['-In-']].keys()):
-                        res.append(save[values['-In-']][j][2])
-                    Fig23[2].bar(list(save[values['-In-']].keys()),res, color='red', width=0.4)
-                    plt.title('Time Vs Algorithms', fontsize=16)
-                    Fig23[2].xticks(list(save[values['-In-']].keys()))
-                    Fig23[2].yticks(res)
-                    akg2.draw()
-                    akg2.get_tk_widget().pack()
-                else:
-                    valve=0
-                    algo=''
-                    master_time=[]
-                    axes=Fig22.axes
-                    axes[0].cla()
-                    for i in list(save.keys()):
-                        time=[]
-                        for j in list(save[i].keys()):
-                            if valve == 0:
-                                valve=save[i][j][2]
-                                algo=j
-                            else:
-                                if save[i][j][2]<valve:
-                                    valve=save[i][j][2]
-                                    algo=(i,j)
-                    axes[0].plot(list(range(1,11)),save[algo[0]][algo[1]][1],marker='o',label=''.join(algo[0].split('/')[-1]).split('.')[0]+f'({algo[1]})')
-                    axes[0].legend()
-                    plt.title('Best File and Algorithm Match')                         
-                    akg.draw()
-                    akg.get_tk_widget().pack()
-                    Fig23[2].cla()
-                    sticks=[]
-                    for i in list(save.keys()):
-                        current=list(save[i].keys())
-                        if sticks==[]:
-                            sticks=np.arange(len(current))
+                if values['-choix1-']==False:
+                    if y<len(checkboxs)-1 :
+                        sg.popup_ok('Please choose just one algorithm in decrypte mode')
+                    else:
+                        if values[checkboxs[-1]]==True and values['-pr-']=='':
+                            sg.popup_ok('Please select the private key file')
+                        elif values['-key-']==''or values['-iv-']=='':
+                            sg.popup_ok('Please put the key and the iv ')
                         else:
-                            sticks=[x+0.25 for x in sticks]
-                        res=[]
-                        for j in list(save[i].keys()):
-                            res.append(save[i][j][2])
-                        Fig23[2].bar(sticks,res, width=0.25,label=''.join(i.split('/')[-1]).split('.')[0])
-                    Fig23[2].xticks([r + 0.25 for r in range(len(current))],
-        current)
-                    Fig23[2].legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
-          ncol=3, fancybox=True, shadow=True)
-                    plt.title('Time Vs Algorithms', fontsize=16,pad=10)
-                    akg2.draw()
-                    akg2.get_tk_widget().pack()
-        # sg.popup_no_buttons(f"Best Time:{min(results)} by {current[results.index(min(results))]}\nWorst Time:{max(results)} by {current[results.index(max(results))]}\nAverage Time: {sum(results)/len(results)}",title="")
+                            if mode == False:
+                                save[values['-In-']]={}
+                            if mode == True:
+                                for i in fichier:
+                                    save[i]={}
+                            current=[]
+                            results=[]
+                            cipher_text=[]
+                            final=[]
+                            time=[]
+                            if values[checkboxs[0]] == True :
+                                current.append(available[0])
+                                encryption(0,values['-choix1-'])
+                            if values[checkboxs[1]] == True :
+                                current.append(available[1])
+                                encryption(1,values['-choix1-'])
+                            if values[checkboxs[2]] == True :
+                                current.append(available[2])
+                                encryption(2,values['-choix1-'])
+                            if values[checkboxs[3]] == True :
+                                current.append(available[3])
+                                encryption(3,values['-choix1-'])
+                            if values[checkboxs[4]] == True :
+                                current.append(available[4])
+                                encryption(4,values['-choix1-'])
+                            if values[checkboxs[5]] == True :
+                                current.append(available[5])
+                                encryption(5,values['-choix1-'])
+                            if values[checkboxs[6]] == True :
+                                current.append(available[6])
+                                encryption(6,values['-choix1-'])
+                            if mode ==False:
+                                res=[]
+                                for i in list(save[values['-In-']].keys()):
+                                    time.append(save[values['-In-']][i][2])
+                                axes=Fig22.axes
+                                axes[0].cla()
+                                axes[0].plot(list(range(1,11)),save[values['-In-']][list(save[values['-In-']].keys())[time.index(min(time))]][1],marker='o',label=[list(save[values['-In-']].keys())[time.index(min(time))]][0])
+                                axes[0].legend()   
+                                akg.draw()
+                                akg.get_tk_widget().pack()
+                                Fig23[2].cla()
+                                for j in list(save[values['-In-']].keys()):
+                                    res.append(save[values['-In-']][j][2])
+                                Fig23[2].bar(list(save[values['-In-']].keys()),res, color='red', width=0.4)
+                                plt.title('Time Vs Algorithms', fontsize=16)
+                                Fig23[2].xticks(list(save[values['-In-']].keys()))
+                                Fig23[2].yticks(res)
+                                akg2.draw()
+                                akg2.get_tk_widget().pack()
+                                if values['-choix1-']== True:
+                                    print(time)
+                                    sg.popup_no_buttons(f"Best Time:{min(time)} by {[list(save[values['-In-']].keys())[time.index(min(time))]][0]}\nWorst Time:{max(time)} by {[list(save[values['-In-']].keys())[time.index(max(time))]][0]}\nAverage Time: {sum(time)/len(time)}",title="")
+                            else:
+                                valve=0
+                                algo=''
+                                master_time=[]
+                                axes=Fig22.axes
+                                axes[0].cla()
+                                for i in list(save.keys()):
+                                    time=[]
+                                    for j in list(save[i].keys()):
+                                        if valve == 0:
+                                            valve=save[i][j][2]
+                                            algo=(i,j)
+                                        else:
+                                            if save[i][j][2]<valve:
+                                                valve=save[i][j][2]
+                                                algo=(i,j)
+                                axes[0].plot(list(range(1,11)),save[algo[0]][algo[1]][1],marker='o',label=''.join(algo[0].split('/')[-1]).split('.')[0]+f'({algo[1]})')
+                                axes[0].legend()
+                                akg.draw()
+                                akg.get_tk_widget().pack()
+                                Fig23[2].cla()
+                                sticks=[]
+                                message='Best match:\n'
+                                for i in list(save.keys()):
+                                    current=list(save[i].keys())
+                                    if sticks==[]:
+                                        sticks=np.arange(len(current))
+                                    else:
+                                        sticks=[x+0.25 for x in sticks]
+                                    res=[]
+                                    for j in list(save[i].keys()):
+                                        res.append(save[i][j][2])
+                                    z=''.join(i.split('/')[-1]).split('.')[0]
+                                    Fig23[2].bar(sticks,res, width=0.25,label=z)
+                                    message+=f'File:{z},Time:{min(res)} by {current[res.index(min(res))]}\n'
+                                Fig23[2].xticks([r + 0.25 for r in range(len(current))],
+                                current)
+                                Fig23[2].legend(loc='upper center', bbox_to_anchor=(0.5, 1.05),
+                                ncol=3, fancybox=True, shadow=True)
+                                plt.title('Time Vs Algorithms', fontsize=16,pad=10)
+                                akg2.draw()
+                                akg2.get_tk_widget().pack()
+                                sg.popup_no_buttons(message,title="")
     if event=='-choix1-'or event=='-choix2-':
         for i in checkboxs:
             window1[i].update(False)
@@ -546,14 +561,8 @@ while True:
             if check_num==0:
                 state=False  
         window1['-all-'].update(button_text(state))
-        if values['-choix2-']==True:
-            l=[]
-            for i in checkboxs:
-                if values[i]==True:
-                    for j in checkboxs:
-                        if j != i:
-                            window1[j].update(False)
-                            window1[i].update(True)
+                        
+                    
     if event == 'About..':
         sg.popup('This project have as purpose to help you to choose the best algorithm to encrypt/decrypt your file. We provide different types of algorithms which you can visuale in a graphic curve.',title='Help')
     if event == 'About...':
@@ -566,6 +575,8 @@ while True:
         window1['-out-'].update('')
         window1['-choix1-'].update(True)
         window1['-In-'].update('')
+        window1['-inputs-'].update([])
+        fichier=[]
         state=False
         for i in checkboxs:
                 window1[i].update(state)
