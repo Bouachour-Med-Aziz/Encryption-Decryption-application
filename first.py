@@ -153,14 +153,14 @@ def main_window(w):
                  [sg.Frame('Private key',frame6)]]
     col1=[
       [sg.Frame('Desired File',frame1)],
-      [sg.pin(sg.Listbox(s=(70,5),key='-inputs-',values=[],visible=False,select_mode=sg.LISTBOX_SELECT_MODE_MULTIPLE)),sg.Push(),sg.pin(sg.Column([[sg.FilesBrowse(file_types=(("Text File","*.txt*"),("Word Files", "*.docx*"),),key='-files-',button_text='ADD',target='-link-')],[sg.B('Delete',button_color='red',key='-delete-')],[sg.B('Single Mode',key='-mode-')]],visible=False,key='-ad-')),sg.Input(key='-link-',visible=False,enable_events=True),sg.Button('Multiple Files',key='-trigger-')],
+      [sg.pin(sg.Listbox(s=(70,5),key='-inputs-',values=[],visible=False,select_mode=sg.LISTBOX_SELECT_MODE_MULTIPLE)),sg.Push(),sg.pin(sg.Column([[sg.FilesBrowse(file_types=(("Text File","*.txt*"),("Word Files", "*.docx*"),),key='-files-',button_text='ADD',target='-link-')],[sg.B('Delete',button_color='red',key='-delete-')],[sg.B('Multi Mode',key='-mode-')]],visible=False,key='-ad-')),sg.Input(key='-link-',visible=False,enable_events=True),sg.Button('Multiple Files',key='-trigger-')],
       [sg.Frame('Operations',frame2)],
       [sg.Column([[sg.Frame('Available Algorithms',frame3)]]),sg.VSeparator(),sg.Column(mini_column)],
      [sg.B('Display File',key='-display-'),sg.B('Reset',key='-reset-'),sg.Push(),sg.B('Exit',key='-exit-',size=10,button_color='red'),sg.B('Run',key='-run-',size=10,button_color='green')]]
     layout =[[sg.MenubarCustom(menu_def,key='-menu-',tearoff=False)],
          [sg.Column(col1),sg.VSeparator(),sg.Column([[sg.Canvas(key='-canvas1-',size=(60,60),pad=10)],
                                                      [sg.Canvas(key='-canvas2-',size=(60,60),pad=10)]])]]
-    return sg.Window('Time-Out',layout,finalize=True,use_custom_titlebar=True)
+    return sg.Window('Time-Out',layout,finalize=True)
 
 def setting_checkup():
     if os.path.isfile(pathset) and os.access(pathset,os.R_OK):
@@ -311,7 +311,7 @@ def encryption(alg,condition):
                     t6=timeit.repeat(stmt="plaintext",repeat=10,number=1,globals=locals())
                     time.append(t6)
                     results.append(sum(t6)/len(t6))
-                    d0['SEED']=[plaintext,t6,sum(t6)/len(t6)]
+                    d0['RSA']=[plaintext,t6,sum(t6)/len(t6)]
         n=save[j].copy()
         n.update(d0)
         save[j]=n     
@@ -329,10 +329,11 @@ while True:
         break
     
     if event == '-mode-':
+        save={}
         mode= not mode
-        if mode == False:
-            window1['-mode-'].update('Multi Mode')
         if mode == True:
+            window1['-mode-'].update('Multi Mode')
+        else:
             window1['-mode-'].update('Single Mode')
             
     if event =='Save':
@@ -381,27 +382,27 @@ while True:
                     file=Path(values['-out-']+'/New decrypted file.txt')
                     file.write_text(f'{c.decode().strip()}')
                     
-        if event =='Save as':
-            if save=={}:
-                sg.popup_ok('Please encrypt/decrypt a file first ')
-            else:
-                time=[]
-                for i in list(save[values['-In-']].keys()):
-                        time.append(save[values['-In-']][i][2])
-                c=save[values['-In-']][list(save[values['-In-']].keys())[time.index(min(time))]]
-                c2=[list(save[values['-In-']].keys())[time.index(min(time))]] 
-                file_path=sg.popup_get_file('Save as',no_window=True,save_as=True,file_types=(("Text File","*.txt*"),))+'.txt'
-                file=Path(file_path)
-                file2=Path('/'.join(file_path.split("/")[:-1]) +'/key file.txt')
-                if values['-choix1-']==True:
-                    if c2[0]!='RSA':
-                        file.write_text(f'{c[0]}\nAlgo Name:{c2[0]}\nkey:{c[3][0]}\nIV:{c[3][1]}')
-                    else:
-                        file.write_text(f'{c[0]}')
-                        file2.write_text(f'{c[3]}')
+    if event =='Save as':
+        if save=={}:
+            sg.popup_ok('Please encrypt/decrypt a file first ')
+        else:
+            time=[]
+            for i in list(save[values['-In-']].keys()):
+                    time.append(save[values['-In-']][i][2])
+            c=save[values['-In-']][list(save[values['-In-']].keys())[time.index(min(time))]]
+            c2=[list(save[values['-In-']].keys())[time.index(min(time))]] 
+            file_path=sg.popup_get_file('Save as',no_window=True,save_as=True,file_types=(("Text File","*.txt*"),))+'.txt'
+            file=Path(file_path)
+            file2=Path('/'.join(file_path.split("/")[:-1]) +'/key file.txt')
+            if values['-choix1-']==True:
+                if c2[0]!='RSA':
+                    file.write_text(f'{c[0]}\nAlgo Name:{c2[0]}\nkey:{c[3][0]}\nIV:{c[3][1]}')
                 else:
-                    c=save[values['-In-']][list(save[values['-In-']].keys())[0]][0]
-                    file.write_text(f'{c.decode().strip()}')
+                    file.write_text(f'{c[0]}')
+                    file2.write_text(f'{c[3]}')
+            else:
+                c=save[values['-In-']][list(save[values['-In-']].keys())[0]][0]
+                file.write_text(f'{c.decode().strip()}')
 
     if event == '-display-':
         if (values['-In-']=='' and mode==False):
@@ -410,6 +411,7 @@ while True:
             os.startfile(values['-In-'])
 
     if event == '-run-' :
+        save={}
         if (values['-In-']=='' and mode==False) or (fichier==[] and mode==True):
             sg.popup_ok('Please choose a file')
         else:
@@ -426,7 +428,7 @@ while True:
                     else:
                         if values[checkboxs[-1]]==True and values['-pr-']=='':
                             sg.popup_ok('Please select the private key file')
-                        elif values['-key-']==''or values['-iv-']=='':
+                        elif (values['-key-']==''or values['-iv-']=='') and values[checkboxs[-1]]==False:
                             sg.popup_ok('Please put the key and the iv ')
                         else:
                             if mode == False:
