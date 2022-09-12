@@ -184,7 +184,6 @@ def encryption(alg,condition):
                 pr_key=str_to_byte(pr_key)
                 pr_key=load_key(pr_key)
         elif filename.split(".")[-1]=="docx":
-            print(filename)
             txt=word_reader(filename)
         if condition ==True:
             if alg in range(6):
@@ -459,7 +458,10 @@ while True:
                                     time.append(save[values['-In-']][i][2])
                                 axes=Fig22.axes
                                 axes[0].cla()
-                                axes[0].plot(list(range(1,11)),save[values['-In-']][list(save[values['-In-']].keys())[time.index(min(time))]][1],marker='o',label=[list(save[values['-In-']].keys())[time.index(min(time))]][0])
+                                if values[checkboxs[-1]] != True :
+                                    axes[0].plot(list(range(1,11)),save[values['-In-']][list(save[values['-In-']].keys())[time.index(min(time))]][1],marker='o',label=[list(save[values['-In-']].keys())[time.index(min(time))]][0])
+                                else:
+                                    axes[0].plot(list(range(1,11)),save[values['-In-']]['RSA'][1],marker='o',label='RSA')
                                 axes[0].legend()   
                                 akg.draw()
                                 akg.get_tk_widget().pack()
@@ -473,7 +475,6 @@ while True:
                                 akg2.draw()
                                 akg2.get_tk_widget().pack()
                                 if values['-choix1-']== True:
-                                    print(time)
                                     sg.popup_no_buttons(f"Best Time:{min(time)} by {[list(save[values['-In-']].keys())[time.index(min(time))]][0]}\nWorst Time:{max(time)} by {[list(save[values['-In-']].keys())[time.index(max(time))]][0]}\nAverage Time: {sum(time)/len(time)}",title="")
                             else:
                                 valve=0
@@ -561,7 +562,6 @@ while True:
                         akg2.draw()
                         akg2.get_tk_widget().pack()
                         if values['-choix1-']== True:
-                            print(time)
                             sg.popup_no_buttons(f"Best Time:{min(time)} by {[list(save[values['-In-']].keys())[time.index(min(time))]][0]}\nWorst Time:{max(time)} by {[list(save[values['-In-']].keys())[time.index(max(time))]][0]}\nAverage Time: {sum(time)/len(time)}",title="")
                     else:
                         valve=0
