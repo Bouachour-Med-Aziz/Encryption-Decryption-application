@@ -16,11 +16,14 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 check_num=0
 state=False
 mode=False
+first= True
 pathset=os.path.expanduser('~/Documents/settingfile.json')
 fichier=[]
+l=[]
 time=[]
 save={}
 checkboxs=['-1-','-2-','-3-','-4-','-5-','-6-','-7-']
+available=['TripleDES','Camellia','SM4','AES','CAST5','SEED','RSA']
 dict_default = {"setting":{"1":'15',"2":"Calibri","3":"LightGrey1"}}
 
 def word_reader(name):
@@ -39,6 +42,10 @@ def save_pr_key(pr):
         encryption_algorithm=serialization.NoEncryption())
     return how
 
+def save_pu_key(pu):
+    how=pu.public_bytes(encoding=serialization.Encoding.OpenSSH,
+        format=serialization.PublicFormat.OpenSSH)
+    return how
 
 def str_to_byte(ob):
     st=ob.encode('utf-8')
@@ -54,9 +61,9 @@ def txt_reader(name):
                 print("Error: ", e)
     return text
 
-def create_bar_graph(x, y):
+def create_bar_graph(year, unemployment_rate):
     plt.figure(figsize =(5, 4))
-    var=plt.bar(x, y, color='red', width=0.4)
+    var=plt.bar(year, unemployment_rate, color='red', width=0.4)
     plt.title('Time Vs Algorithms', fontsize=16)
     return (plt.gcf(), var,plt)
 
@@ -88,8 +95,8 @@ def setting_create(y):
     set_layout=[[sg.T('SETTING')],
                 [sg.T('Font Size:'),sg.Input(s=2,default_text=y[0],key='-fontsize-'),sg.Column([[sg.Button('▲', size=(1, 1), font='Any 7', border_width=0, button_color=(sg.theme_text_color(), sg.theme_background_color()), key='-UP-')],
             [sg.Button('▼', size=(1, 1), font='Any 7', border_width=0, button_color=(sg.theme_text_color(), sg.theme_background_color()), key='-DOWN-')]])],
-                [sg.T('Font Family:'),sg.Combo(["Arial", "Baskerville", "Calibri", "Cambria", "Courier New","Georgia", "Goudy Old Style", "Microsoft Sans Serif", "Verdana"], default_value=y[1], key='-FONTFAMILY-')],
-                [sg.Text("Theme:"),sg.Combo(["Black", "BlueMono", "BrightColors", "Dark", "DarkBlack", "GrayGrayGray","LightBlue", "SystemDefaultForReal", "Purple", "SystemDefault","LightGrey1"], default_value=y[2], key='-THEME-')],
+                [sg.T('Font Family:'),sg.Combo(["Arial", "Baskerville", "Calibri", "Cambria", "Cambria", "Courier New","Georgia", "Goudy Old Style", "Microsoft Sans Serif", "Verdana"], default_value=y[1], key='-FONTFAMILY-')],
+                [sg.Text("Theme:"),sg.Combo(["Black", "BlueMono", "BrightColors", "Dark", "DarkBlack", "GrayGrayGray","LightBlue", "SystemDefaultForReal", "Purple", "SystemDefault"], default_value=y[2], key='-THEME-')],
                 [sg.Button("Save Current Settings", s=20),sg.Button('Cancel',key='-cancel-',size=10,button_color='red'),sg.Button('Confirm',key='-confirme-',size=10,button_color='green')]]
     return sg.Window('Settings Window',set_layout,modal=True)
 
@@ -106,13 +113,11 @@ def setting_window1(x):
         counter = int(values['-fontsize-'])
         if event == '-UP-':
             counter+=1
-            if counter>25:
-                counter=25
         else:
             if event=='-DOWN-':
                 counter-=1
-                if counter<15:
-                    counter=15
+                if counter<10:
+                    counter=10
         window2['-fontsize-'].update(counter)
         if event == "Save Current Settings":
             if z[0]==values['-fontsize-'] and z[1]==values['-FONTFAMILY-'] and z[2]==values['-THEME-']:
@@ -126,7 +131,7 @@ def setting_window1(x):
 def main_window(w):
     sg.set_options(font=(w[1],w[0]))
     sg.theme(w[2])
-    menu_def=[['File',['Save','Save as','---','Exit']],
+    menu_def=[['File',['Save','Save as','Copy key','---','Exit']],
           ['Settings',['Views']],
           ['Credits',['About...']],
           ['Help',['About..']]]
@@ -155,7 +160,7 @@ def main_window(w):
     layout =[[sg.MenubarCustom(menu_def,key='-menu-',tearoff=False)],
          [sg.Column(col1),sg.VSeparator(),sg.Column([[sg.Canvas(key='-canvas1-',size=(60,60),pad=10)],
                                                      [sg.Canvas(key='-canvas2-',size=(60,60),pad=10)]])]]
-    return sg.Window('Time-Out',layout,finalize=True,grab_anywhere=True)
+    return sg.Window('Time-Out',layout,finalize=True)
 
 def setting_checkup():
     if os.path.isfile(pathset) and os.access(pathset,os.R_OK):
@@ -379,8 +384,6 @@ while True:
     if event =='Save as':
         if save=={}:
             sg.popup_ok('Please encrypt/decrypt a file first ')
-        if  mode != False :
-            sg.popup_ok('Please switch to Single Mode')
         else:
             time=[]
             for i in list(save[values['-In-']].keys()):
@@ -640,7 +643,7 @@ while True:
         sg.popup('This project have as purpose to help you to choose the best algorithm to encrypt/decrypt your file. We provide different types of algorithms which you can visuale in a graphic curve.',title='Help')
     
     if event == 'About...':
-        sg.popup('Version : 1.0"\n"PySimpleGUI Version :', sg.version, 'This project is made by the efforts of :',  "* Moetez Bouhlel", "* Firas Necib", "* Mohamed Aziz Bouachour",
+        sg.popup('Version : 1.0", "PySimpleGUI Version :', sg.version, 'This project is made by the efforts of :',  "* Moetez Bouhlel", "* Firas Necib", "* Mohamed Aziz Bouachour",
                      title='About the application')
     
     if event == '-reset-':
