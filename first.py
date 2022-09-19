@@ -89,7 +89,7 @@ def setting_create(y):
                 [sg.T('Font Size:'),sg.Input(s=2,default_text=y[0],key='-fontsize-'),sg.Column([[sg.Button('▲', size=(1, 1), font='Any 7', border_width=0, button_color=(sg.theme_text_color(), sg.theme_background_color()), key='-UP-')],
             [sg.Button('▼', size=(1, 1), font='Any 7', border_width=0, button_color=(sg.theme_text_color(), sg.theme_background_color()), key='-DOWN-')]])],
                 [sg.T('Font Family:'),sg.Combo(["Arial", "Baskerville", "Calibri", "Cambria", "Courier New","Georgia", "Goudy Old Style", "Microsoft Sans Serif", "Verdana"], default_value=y[1], key='-FONTFAMILY-')],
-                [sg.Text("Theme:"),sg.Combo(["Black", "BlueMono", "BrightColors", "Dark", "DarkBlack", "GrayGrayGray","LightBlue", "SystemDefaultForReal", "Purple", "SystemDefault","LightGrey1"], default_value=y[2], key='-THEME-')],
+                [sg.Text("Theme:"),sg.Combo(["PythonPlus", "TanBlue", "LightGray1", "LightGray", "LightBrown", "DarkTeal12","DarkPurple1", "DarkGrey12", "DarkGreen4", "DarkBlue","BlueMono"], default_value=y[2], key='-THEME-')],
                 [sg.Button("Save Current Settings", s=20),sg.Button('Cancel',key='-cancel-',size=10,button_color='red'),sg.Button('Confirm',key='-confirme-',size=10,button_color='green')]]
     return sg.Window('Settings Window',set_layout,modal=True)
 
@@ -640,7 +640,7 @@ while True:
         sg.popup('This project have as purpose to help you to choose the best algorithm to encrypt/decrypt your file. We provide different types of algorithms which you can visuale in a graphic curve.',title='Help')
     
     if event == 'About...':
-        sg.popup('Version : 1.0"\n"PySimpleGUI Version :', sg.version, 'This project is made by the efforts of :',  "* Moetez Bouhlel", "* Firas Necib", "* Mohamed Aziz Bouachour",
+        sg.popup('Version : 1.0"\n"PySimpleGUI Version :', sg.version, "\nProposed by: Mohamed Houcine Elhdhili",'\nThis project is made by the efforts of :',  "* Moetez Bouhlel", "* Firas Necib", "* Mohamed Aziz Bouachour",
                      title='About the application')
     
     if event == '-reset-':
@@ -658,6 +658,7 @@ while True:
         window1['-all-'].update(button_text(state))
         
     if event == '-trigger-':
+        save={}
         mode=True
         window1['-inputs-'].update(visible=True)
         window1['-trigger-'].update(visible=False)
