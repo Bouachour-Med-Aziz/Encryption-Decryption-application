@@ -8,10 +8,7 @@
 -->
 <!-- PROJECT LOGO -->
 <br />
-<div align="center">
-  <a href="https://github.com/github_username/repo_name">
-    <img src="assets/images/readme/Picture1.png" alt="Logo">
-  </a>
+
 
 <h3 align="center">Encrytion-Decryption-Application</h3>
 
@@ -51,7 +48,7 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-![alt text](https://github.com/BMoetez/project/blob/main/assets/images/readme/home.PNG?raw=true)
+![alt text](https://github.com/Bouachour-Med-Aziz/Encrytion-Decryption-application/blob/firas-part/app_front.PNG?raw=true)
 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
@@ -78,15 +75,32 @@ The purpose of this app is to calculate execution time of algorithms.
 <br/>
 To cover all the necessary fundamental we divided the app in 4 major modes:
 <ul>
-  <li>Classic Mode:</li>
-  <p> Custom-made levels for you to explore with new gate every couple of level to provide an engaging experience</p>
-  <img src="assets/images/readme/classic mode.PNG" alt="Logo" >
-  <li>Endless Mode:</li>
-  <p>A limitless supply of randomly generated levels, so the circuit based fun never needs to stop!(PS:you need to complete classic mode in order to unlock this mode)</p>
-  <img src="assets/images/readme/endless.PNG" alt="Logo" >
-  <li>learning Mode:</li>
-  <p>Designed lessons to learn the function of each logic gate with a quiz in the end of each lessons to test your acquired knowledge (PS:you need to complete classic mode in order to unlock this mode)</p>
-  <img src="assets/images/readme/lesson.PNG" alt="Logo" >
+  <li>How To encrypt:</li>
+  <img src="encryption.PNG" alt="Logo" >
+  <ol type="1">
+    <li>First of all, choose a file to encrypt</li>
+    <li>Then choose encryption as operation</li>
+    <li>After that choose (one or more) algorithm(s) for encryption</li>
+    <li>Finally press RUN</li>
+  </ol>
+ 
+  <li>How To save the encrypted file:</li>
+  <img src="savefile.PNG" alt="Logo" >
+  <ol type="1">
+    <li>After encryption choose an output folder </li>
+    <li>Then press save in the file menu</li>
+  </ol>
+
+  
+  <li>How To decrypt:</li>
+  <img src="decryption.PNG" alt="Logo" >
+    <ol type="1">
+      <li>Choose the encrypted file to decrypt</li>
+      <li>Choose Decryption as operation</li>
+      <li>Choose the adequate algorithm to decrypt (which is mentioned in the save file)</li>
+      <li>Then enter the Key and IV (Private Key for assymmetric algorithms) found in the save file</li>
+      <li>Finally press RUN</li>
+    </ol>
 </ul>
 <p align="right">(<a href="#top">back to top</a>)</p>
 
