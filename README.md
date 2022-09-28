@@ -67,6 +67,7 @@ This is the User Interface of the application as shown.
 ## Getting Started
 
 This is an example of an exe file for download.
+<a href="./exe/app.exe" download>Download</a>
 
 
 <!-- USAGE EXAMPLES -->
@@ -76,7 +77,7 @@ The purpose of this app is to calculate execution time of algorithms.
 To cover all the necessary fundamental we divided the app in 4 major modes:
 <ul>
   <li>How To encrypt:</li>
-  <img src="encryption.PNG" alt="Logo" >
+  <img src="Readme/encryption.PNG" alt="Logo" >
   <ol type="1">
     <li>First of all, choose a file to encrypt</li>
     <li>Then choose encryption as operation</li>
@@ -85,7 +86,7 @@ To cover all the necessary fundamental we divided the app in 4 major modes:
   </ol>
  
   <li>How To save the encrypted file:</li>
-  <img src="savefile.png" alt="Logo" >
+  <img src="Readme/savefile.png" alt="Logo" >
   <ol type="1">
     <li>After encryption choose an output folder </li>
     <li>Then press save in the file menu</li>
@@ -93,7 +94,7 @@ To cover all the necessary fundamental we divided the app in 4 major modes:
 
   
   <li>How To decrypt:</li>
-  <img src="decryption.PNG" alt="Logo" >
+  <img src="Readme/decryption.PNG" alt="Logo" >
     <ol type="1">
       <li>Choose the encrypted file to decrypt</li>
       <li>Choose Decryption as operation</li>
