@@ -39,7 +39,6 @@
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#contributeurs">Contributeurs</a></li>
     <li><a href="#acknowledgments">Acknowledgments</a></li>
-    <li><a href="#yet-to-implement">Yet to implement</a></li>
     <li><a href="#bugs-to-fix">Bugs to fix</a></li>
   </ol>
 </details>
@@ -48,6 +47,7 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
+This is the User Interface of the application as shown.
 ![alt text](https://github.com/Bouachour-Med-Aziz/Encrytion-Decryption-application/blob/firas-part/app_front.PNG?raw=true)
 
 
@@ -66,7 +66,7 @@
 <!-- GETTING STARTED -->
 ## Getting Started
 
-This is an example of un exe file for download.
+This is an example of an exe file for download.
 
 
 <!-- USAGE EXAMPLES -->
@@ -85,7 +85,7 @@ To cover all the necessary fundamental we divided the app in 4 major modes:
   </ol>
  
   <li>How To save the encrypted file:</li>
-  <img src="savefile.PNG" alt="Logo" >
+  <img src="savefile.png" alt="Logo" >
   <ol type="1">
     <li>After encryption choose an output folder </li>
     <li>Then press save in the file menu</li>
