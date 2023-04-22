@@ -13,7 +13,7 @@
 <h3 align="center">Encryption-Decryption-Application</h3>
 
   <p align="center">
-    The objective of this app is to compare the execution time of different encryption/decryption algorithms using text/word files as an input.
+    The objective of this app is to take one or multiple text/word files and allows you to choose from a variety of symmetric/asymmetric algorithms to compare their execution time. It can then save the encoded file and also decode it.
     <br />
 </div>
 
